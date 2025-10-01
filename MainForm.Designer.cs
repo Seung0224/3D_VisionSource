@@ -34,11 +34,13 @@
             // MainForm
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
-            this.ClientSize = new System.Drawing.Size(883, 641);
+            this.ClientSize = new System.Drawing.Size(276, 111);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "MainForm";
             this.Text = "MainForm";
+            this.TitleForeColor = System.Drawing.Color.Black;
             this.ZoomScaleRect = new System.Drawing.Rectangle(15, 15, 883, 641);
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.ResumeLayout(false);
 
         }
