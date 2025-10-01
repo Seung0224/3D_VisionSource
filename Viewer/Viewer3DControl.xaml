@@ -1,0 +1,28 @@
+﻿<UserControl x:Class="_3D_VisionSource.Viewer.Viewer3DControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:dx="clr-namespace:HelixToolkit.Wpf.SharpDX;assembly=HelixToolkit.Wpf.SharpDX"
+             Width="Auto" Height="Auto">
+    <Grid>
+        <dx:Viewport3DX x:Name="Viewport"
+                        ShowCoordinateSystem="True"
+                        ShowViewCube="True"
+                        EnableDesignModeRendering="False">
+            <!-- 카메라 -->
+            <dx:Viewport3DX.Camera>
+                <dx:PerspectiveCamera Position="0,-200,150"
+                                      LookDirection="0,200,-150"
+                                      UpDirection="0,0,1"
+                                      FieldOfView="45" />
+            </dx:Viewport3DX.Camera>
+
+            <!-- 조명 -->
+            <dx:DirectionalLight3D Direction="-0.3,-0.3,-1" Color="White" />
+            <dx:AmbientLight3D     Color="#FF606060" />
+
+            <!-- 포인트 모델 (GPU) -->
+            <dx:PointGeometryModel3D x:Name="PointModel" />
+            <!-- 주의: IsDepthTest 제거, Figure 속성도 일단 생략 -->
+        </dx:Viewport3DX>
+    </Grid>
+</UserControl>
