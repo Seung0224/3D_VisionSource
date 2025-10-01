@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 using MediaColor = System.Windows.Media.Color;
 using System.Windows.Media.Media3D;
 
@@ -12,17 +14,18 @@ namespace _3D_VisionSource
         public float Sy { get; set; } = 0.05f;
         public float ZScale { get; set; } = 0.001f;
         public float ZOffset { get; set; } = 0f;
-        public byte InvalidZ { get; set; } = 0;   // 0, 255, 65535 등(8bit이면 0/255)
-        public float PLo { get; set; } = 1f;      // Z 1% ~ 99% 정규화
+        public byte InvalidZ { get; set; } = 0;      // 8-bit 무효
+        public ushort InvalidZ16 { get; set; } = 0;  // 16-bit 무효
+        public float PLo { get; set; } = 1f;
         public float PHi { get; set; } = 99f;
-        public bool CenterOrigin { get; set; } = false; // (x - cx, y - cy)
+        public bool CenterOrigin { get; set; } = true;
     }
 
     public class PointCloudResult
     {
         public Point3D[] Points;
         public MediaColor[] Colors;
-        public int Width;   // 원본 작업 해상도(크롭 후)
+        public int Width;
         public int Height;
     }
 
@@ -30,11 +33,9 @@ namespace _3D_VisionSource
     {
         public static PointCloudResult BuildPointCloud(Bitmap intensity, Bitmap zmap, FusionParams p)
         {
-            if (intensity == null || zmap == null)
-                throw new ArgumentNullException("intensity/zmap is null.");
+            if (intensity == null || zmap == null) throw new ArgumentNullException();
             if (p == null) throw new ArgumentNullException(nameof(p));
 
-            // 1) 공통 크기로 crop
             int h = Math.Min(intensity.Height, zmap.Height);
             int w = Math.Min(intensity.Width, zmap.Width);
             var roi = new Rectangle(0, 0, w, h);
@@ -42,38 +43,55 @@ namespace _3D_VisionSource
             using (var I2 = intensity.Clone(roi, intensity.PixelFormat))
             using (var Z2 = zmap.Clone(roi, zmap.PixelFormat))
             {
-                // 2) I → 그레이 0..1
-                float[,] I01 = ToGray01(I2);
+                var I01 = ToGray01(I2);
+                var zRaw = ReadZRaw(Z2, out bool is16bit);
 
-                // 3) Z → 1~99% 정규화 (0..1)
-                float[,] Z01 = PercentileNormalize(Z2, p.PLo, p.PHi, out _, out _);
+                var mask = new bool[h, w];
+                int validCount = 0;
+                if (is16bit)
+                {
+                    for (int y = 0; y < h; y++)
+                        for (int x = 0; x < w; x++)
+                        {
+                            ushort v = (ushort)zRaw[y, x];
+                            bool ok = v != p.InvalidZ16;
+                            mask[y, x] = ok;
+                            if (ok) validCount++;
+                        }
+                }
+                else
+                {
+                    for (int y = 0; y < h; y++)
+                        for (int x = 0; x < w; x++)
+                        {
+                            byte v = (byte)zRaw[y, x];
+                            bool ok = v != p.InvalidZ;
+                            mask[y, x] = ok;
+                            if (ok) validCount++;
+                        }
+                }
+                if (validCount == 0) throw new InvalidOperationException("유효한 Z 포인트가 없습니다.");
 
-                // 4) 포인트 생성 (InvalidZ 필터 고려 → List로 수집)
-                var pts = new List<Point3D>(w * h);
-                var cols = new List<MediaColor>(w * h);
+                var pts = new List<Point3D>(validCount);
+                var cols = new List<MediaColor>(validCount);
 
                 double cx = p.CenterOrigin ? w / 2.0 : 0.0;
                 double cy = p.CenterOrigin ? h / 2.0 : 0.0;
 
+                var Zn = PercentileNormalize(zRaw, p.PLo, p.PHi); // 색상용
+
                 for (int y = 0; y < h; y++)
                     for (int x = 0; x < w; x++)
                     {
-                        // 원본 Z 픽셀값(8bit 가정)로 invalid 필터
-                        if (p.InvalidZ != 0)
-                        {
-                            byte raw = Z2.GetPixel(x, y).R;
-                            if (raw == p.InvalidZ) continue;
-                        }
+                        if (!mask[y, x]) continue;
 
-                        // 좌표: 파이썬과 동일하게 Y축 부호 반전(-Y)
                         double X = (x - cx) * p.Sx;
-                        double Y = -(y - cy) * p.Sy;
-                        double Z = p.ZOffset + Z01[y, x] * p.ZScale;
+                        double Y = -(y - cy) * p.Sy; // 파이썬과 동일하게 -Y
+                        double Z = p.ZOffset + zRaw[y, x] * p.ZScale; // 지오메트리는 raw 사용
 
                         pts.Add(new Point3D(X, Y, Z));
 
-                        // 색상: JET(Z01) * (0.5 + 0.5 * I01)
-                        var (r, g, b) = Jet(Z01[y, x]);
+                        var (r, g, b) = Jet(Clamp01(Zn[y, x]));
                         float wgt = 0.5f + 0.5f * I01[y, x];
                         byte R = (byte)Math.Round(Clamp01(r * wgt) * 255);
                         byte G = (byte)Math.Round(Clamp01(g * wgt) * 255);
@@ -91,18 +109,12 @@ namespace _3D_VisionSource
             }
         }
 
-        // --- Helpers ---
-
         private static float[,] ToGray01(Bitmap bmp)
         {
             int w = bmp.Width, h = bmp.Height;
             var f = new float[h, w];
-            for (int y = 0; y < h; y++)
-                for (int x = 0; x < w; x++)
-                {
-                    var c = bmp.GetPixel(x, x); // BUG guard: ensures bounds (typo check)
-                }
-            // 위 한 줄은 실수 방지용 검사였다가 제거합니다:
+
+            // 가능한 빠르게 처리하려면 LockBits 권장(여기는 간단 버전)
             for (int y = 0; y < h; y++)
                 for (int x = 0; x < w; x++)
                 {
@@ -112,27 +124,71 @@ namespace _3D_VisionSource
             return f;
         }
 
-        private static float[,] PercentileNormalize(Bitmap zmap, float loPct, float hiPct, out float lo, out float hi)
+        // zRaw: 8bit면 [0..255], 16bit면 [0..65535]
+        private static float[,] ReadZRaw(Bitmap z, out bool is16bit)
         {
-            int w = zmap.Width, h = zmap.Height;
-            float[] vals = new float[w * h];
-            int idx = 0;
+            int w = z.Width, h = z.Height;
+            var pfBits = Image.GetPixelFormatSize(z.PixelFormat);
+            is16bit = (pfBits == 16);
+
+            if (!is16bit)
+            {
+                var a = new float[h, w];
+                for (int y = 0; y < h; y++)
+                    for (int x = 0; x < w; x++)
+                        a[y, x] = z.GetPixel(x, y).R;
+                return a;
+            }
+            else
+            {
+                var a = new float[h, w];
+                var data = z.LockBits(new Rectangle(0, 0, w, h), ImageLockMode.ReadOnly, z.PixelFormat);
+                try
+                {
+                    int stride = data.Stride;
+                    IntPtr scan0 = data.Scan0;
+                    int bytesPerPixel = 2; // 16bpp Gray
+
+                    for (int y = 0; y < h; y++)
+                    {
+                        IntPtr rowPtr = scan0 + y * stride;
+                        for (int x = 0; x < w; x++)
+                        {
+                            ushort v = (ushort)Marshal.ReadInt16(rowPtr, x * bytesPerPixel);
+                            a[y, x] = v; // 0..65535
+                        }
+                    }
+                }
+                finally
+                {
+                    z.UnlockBits(data);
+                }
+                return a;
+            }
+        }
+
+        // 입력: zRaw(8/16bit 범위). 출력: 1~99 분위수로 0..1 정규화
+        private static float[,] PercentileNormalize(float[,] zRaw, float loPct, float hiPct)
+        {
+            int h = zRaw.GetLength(0), w = zRaw.GetLength(1);
+            int n = w * h;
+            var buf = new float[n];
+            int k = 0;
             for (int y = 0; y < h; y++)
                 for (int x = 0; x < w; x++)
-                    vals[idx++] = zmap.GetPixel(x, y).R;
+                    buf[k++] = zRaw[y, x];
 
-            Array.Sort(vals);
-            lo = Percentile(vals, loPct);
-            hi = Percentile(vals, hiPct);
+            Array.Sort(buf);
+            float lo = Percentile(buf, loPct);
+            float hi = Percentile(buf, hiPct);
+            float denom = Math.Max(1e-6f, hi - lo);
 
             var outZ = new float[h, w];
-            float denom = Math.Max(1e-6f, (hi - lo));
             for (int y = 0; y < h; y++)
                 for (int x = 0; x < w; x++)
                 {
-                    float v = zmap.GetPixel(x, y).R;
-                    float z = (v - lo) / denom;
-                    outZ[y, x] = Clamp01(z);
+                    float t = (zRaw[y, x] - lo) / denom;
+                    outZ[y, x] = Clamp01(t);
                 }
             return outZ;
         }
@@ -145,7 +201,7 @@ namespace _3D_VisionSource
             double frac = rank - i;
             if (i + 1 < sorted.Length)
                 return (float)(sorted[i] * (1 - frac) + sorted[i + 1] * frac);
-            return sorted[sorted.Length - 1]; // C# 7.3 호환
+            return sorted[sorted.Length - 1];
         }
 
         private static (float r, float g, float b) Jet(float t)
