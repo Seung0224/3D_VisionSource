@@ -1,11 +1,10 @@
-﻿using SharpDX;                
+﻿using SharpDX;
 using System;
 using System.Linq;
-using System.Windows;         
+using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;   
+using System.Windows.Media;
 using HelixToolkit.Wpf.SharpDX;
-using WpfColor = System.Windows.Media.Color;
 using Media3D = System.Windows.Media.Media3D;
 using DxCamera = HelixToolkit.Wpf.SharpDX.PerspectiveCamera;
 
@@ -24,7 +23,6 @@ namespace _3D_VisionSource.Viewer
         {
             if (pts == null || pts.Length == 0) return;
 
-            // 중심/반경
             var cx = pts.Average(p => p.X);
             var cy = pts.Average(p => p.Y);
             var cz = pts.Average(p => p.Z);
@@ -63,22 +61,69 @@ namespace _3D_VisionSource.Viewer
             cam.FarPlaneDistance = Math.Max(10.0, r * 20.0);
         }
 
-
-        public void LoadPoints(Media3D.Point3D[] points, WpfColor[] colors, double pointSize = 2.0)
+        public void LoadPoints(System.Windows.Media.Media3D.Point3D[] pts,
+                               System.Windows.Media.Color[] cols,
+                               double pointSize = 2.0)
         {
-            var positions = new Vector3Collection(points.Select(p => new SharpDX.Vector3((float)p.X, (float)p.Y, (float)p.Z)));
+            if (pts == null || cols == null || pts.Length == 0 || cols.Length != pts.Length)
+                return;
 
-            Color4Collection color4s =
-                (colors != null && colors.Length == points.Length)
-                ? new Color4Collection(colors.Select(c => new Color4(c.R / 255f, c.G / 255f, c.B / 255f, 1f)))
-                : new Color4Collection(Enumerable.Repeat(new Color4(0.1f, 0.6f, 1f, 1f), positions.Count));
+            var positions = new Vector3Collection(
+                pts.Select(p => new Vector3((float)p.X, (float)p.Y, (float)p.Z)));
 
-            var geom = new PointGeometry3D { Positions = positions, Colors = color4s };
+            var colors = new Color4Collection(
+                cols.Select(c => new Color4(c.R / 255f, c.G / 255f, c.B / 255f, 1f)));
 
-            PointModel.Geometry = new PointGeometry3D { Positions = positions, Colors = color4s };
-            PointModel.Size = new System.Windows.Size(pointSize, pointSize);
+            var geom = new PointGeometry3D
+            {
+                Positions = positions,
+                Colors = colors
+            };
 
-            FitCameraToPoints(points);
+            var model = new PointGeometryModel3D
+            {
+                Geometry = geom,
+                IsHitTestVisible = false
+            };
+
+            // 곱연산용 상수색은 White로 (버텍스 컬러를 그대로 보이게)
+            var colorProp = model.GetType().GetProperty("Color", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
+            if (colorProp != null)
+            {
+                var t = colorProp.PropertyType;
+                if (t == typeof(SharpDX.Color4)) colorProp.SetValue(model, new Color4(1f, 1f, 1f, 1f), null);
+                else if (t == typeof(System.Windows.Media.Color)) colorProp.SetValue(model, System.Windows.Media.Colors.White, null);
+            }
+
+            // 크기 설정 (버전별 속성명 호환)
+            var sizeProp = model.GetType().GetProperty("Size");
+            if (sizeProp != null)
+            {
+                var t = sizeProp.PropertyType;
+                if (t == typeof(double)) sizeProp.SetValue(model, pointSize, null);
+                else if (t == typeof(float)) sizeProp.SetValue(model, (float)pointSize, null);
+                else if (t == typeof(System.Windows.Size)) sizeProp.SetValue(model, new System.Windows.Size(pointSize, pointSize), null);
+            }
+            else
+            {
+                var pointSizeProp = model.GetType().GetProperty("PointSize");
+                if (pointSizeProp != null)
+                {
+                    if (pointSizeProp.PropertyType == typeof(double)) pointSizeProp.SetValue(model, pointSize, null);
+                    else if (pointSizeProp.PropertyType == typeof(float)) pointSizeProp.SetValue(model, (float)pointSize, null);
+                }
+            }
+
+            var oitProp = model.GetType().GetProperty("EnableOIT");
+            if (oitProp != null && oitProp.CanWrite) oitProp.SetValue(model, true, null);
+
+            // ★ 여기서 더 이상 colors를 덮어쓰지 않는다 ★
+
+            Viewport.Items.Clear();
+            Viewport.Items.Add(model);
+
+            FitCameraToPoints(pts);
+            Viewport.ZoomExtents();
         }
     }
 }

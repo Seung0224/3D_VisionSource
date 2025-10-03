@@ -59,7 +59,6 @@
             this.MainUITLP.Size = new System.Drawing.Size(1291, 820);
             this.MainUITLP.TabIndex = 0;
             this.MainUITLP.TagString = null;
-            this.MainUITLP.Paint += new System.Windows.Forms.PaintEventHandler(this.MainUITLP_Paint);
             // 
             // ButtonUITLP
             // 
@@ -135,7 +134,6 @@
             this.MainUIPanel.TabIndex = 2;
             this.MainUIPanel.Text = "MainUIPanel";
             this.MainUIPanel.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
-            this.MainUIPanel.Click += new System.EventHandler(this.MainUIPanel_Click);
             // 
             // btnOpenIntensity
             // 

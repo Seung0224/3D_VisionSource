@@ -10,7 +10,10 @@ namespace _3D_VisionSource
     public partial class MainForm : UIForm
     {
         #region fields
-        private Bitmap IntensityBuffer, ZmapBuffer;
+        // ✅ Bitmap 대신 파일 경로를 보관
+        private string _intensityPath;
+        private string _zmapPath;
+
         private Viewer3DControl _viewer;
         #endregion
 
@@ -20,6 +23,7 @@ namespace _3D_VisionSource
             InitializeMainUI();
             Initialize3DViwerUI();
         }
+
         private void InitializeMainUI()
         {
             this.Style = UIStyle.Blue;
@@ -46,66 +50,71 @@ namespace _3D_VisionSource
                 ofd.CheckFileExists = true;
                 if (ofd.ShowDialog(this) == DialogResult.OK)
                 {
-                    IntensityBuffer?.Dispose();
-                    using (var img = Image.FromFile(ofd.FileName))
-                    {
-                        IntensityBuffer = new Bitmap(img);
-                    }
+                    _intensityPath = ofd.FileName;
+                    UIMessageTip.ShowOk("Intensity loaded.");
                 }
             }
         }
 
         private void btnOpenZMap_Click(object sender, EventArgs e)
         {
-
             using (var ofd = new OpenFileDialog())
             {
-                ofd.Title = "Select Zmap Image";
+                ofd.Title = "Select ZMap Image (8/16-bit GRAY)";
                 ofd.Filter = "Image Files|*.png;*.jpg;*.jpeg;*.bmp;*.tif;*.tiff|All Files|*.*";
                 ofd.CheckFileExists = true;
                 if (ofd.ShowDialog(this) == DialogResult.OK)
                 {
-                    ZmapBuffer?.Dispose();
-                    using (var img = Image.FromFile(ofd.FileName))
-                    {
-                        ZmapBuffer = new Bitmap(img);
-                    }
+                    _zmapPath = ofd.FileName;
+                    UIMessageTip.ShowOk("ZMap loaded.");
                 }
             }
         }
 
         private void btnFusion_Click(object sender, EventArgs e)
         {
-            UIMessageTip.ShowOk("Fusion Run.");
-            if (IntensityBuffer == null || ZmapBuffer == null)
+            try
             {
-                UIMessageTip.ShowWarning("먼저 Intensity/ZMap 이미지를 로드하세요.");
-                return;
+                if (string.IsNullOrEmpty(_intensityPath) || string.IsNullOrEmpty(_zmapPath))
+                {
+                    UIMessageTip.ShowWarning("먼저 Intensity/ZMap 이미지를 로드하세요.");
+                    return;
+                }
+
+                var fp = new FusionParams
+                {
+                    Sx = 0.05f,
+                    Sy = 0.05f,
+                    ZScale = 0.001f,
+                    ZOffset = 0f,
+                    InvalidZ = 0,
+                    InvalidZ16 = 0,
+                    CenterOrigin = true
+                };
+
+                var sw = Stopwatch.StartNew();
+                var result = FusionEngine.BuildPointCloudFromFiles(_intensityPath, _zmapPath, fp);
+                sw.Stop();
+
+                Trace.WriteLine($"Fusion: pts={result.Points?.Length ?? 0}, time={sw.ElapsedMilliseconds} ms");
+
+                _viewer.LoadPoints(result.Points, result.Colors, pointSize: 2.0);
+                UIMessageTip.ShowOk($"Fusion OK ({result.Points?.Length ?? 0} pts, {sw.ElapsedMilliseconds} ms)");
             }
-
-            var result = FusionEngine.BuildPointCloud(IntensityBuffer, ZmapBuffer, new FusionParams());
-            Trace.WriteLine($"pts={result.Points?.Length ?? 0}");
-            _viewer.LoadPoints(result.Points, result.Colors, pointSize: 2.0);
-        }
-
-        private void MainUITLP_Paint(object sender, PaintEventArgs e)
-        {
-
-        }
-
-        private void MainUIPanel_Click(object sender, EventArgs e)
-        {
-
+            catch (Exception ex)
+            {
+                Trace.WriteLine(ex);
+                UIMessageBox.ShowError($"Fusion 실패\n{ex.Message}");
+            }
         }
         #endregion
 
         #region Form Events
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            IntensityBuffer?.Dispose();
-            IntensityBuffer = null;
-            ZmapBuffer?.Dispose();
-            ZmapBuffer = null;
+            // ✅ 파일 경로만 보관하므로 Dispose 불필요
+            _intensityPath = null;
+            _zmapPath = null;
         }
         #endregion
     }
