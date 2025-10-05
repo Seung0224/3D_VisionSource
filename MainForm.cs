@@ -228,9 +228,8 @@ namespace _3D_VisionSource
                 var result = FusionEngine.BuildPointCloudFromFiles(_ctx.IntensityPath, _ctx.ZMapPath, fp);
                 sw.Stop();
 
-                Trace.WriteLine($"Fusion: pts={result.Points?.Length ?? 0}, time={sw.ElapsedMilliseconds} ms");
                 _viewer.LoadPoints(result.Points, result.Colors, pointSize: 2.0);
-                UIMessageTip.ShowOk($"Fusion OK ({result.Points?.Length ?? 0} pts, {sw.ElapsedMilliseconds} ms)");
+                UIMessageTip.ShowOk($"Fusion 성공");
             }
             catch (Exception ex)
             {
@@ -241,7 +240,40 @@ namespace _3D_VisionSource
         #endregion
 
         #region Form Events
-        private void MainForm_FormClosing(object sender, FormClosingEventArgs e) => _ctx.Clear();
+      
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            _ctx.Clear();
+            SafeDisposeViewer();
+
+            try { ViewerHost?.Dispose(); } catch { /* ignore */ }
+        }
+
+        private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            try
+            {
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
+            }
+            catch { /* ignore */ }
+
+            try { Environment.Exit(0); } catch { /* ignore */ }
+        }
+
+        private void SafeDisposeViewer()
+        {
+            try
+            {
+                if (_viewer is IDisposable d)
+                    d.Dispose();
+
+                // (3) 참조 제거
+                _viewer = null;
+            }
+            catch { /* ignore */ }
+        }
         #endregion
     }
 }
