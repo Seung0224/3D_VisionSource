@@ -31,13 +31,20 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.MainUITLP = new Sunny.UI.UITableLayoutPanel();
             this.ButtonUITLP = new Sunny.UI.UITableLayoutPanel();
-            this.btnFusion = new Sunny.UI.UISymbolButton();
-            this.btnOpenZMap = new Sunny.UI.UISymbolButton();
+            this.uiTableLayoutPanel1 = new Sunny.UI.UITableLayoutPanel();
+            this.BTN_ZMAP_PATH_SEARCH = new Sunny.UI.UIButton();
+            this.PNL_ZMAP_PATH = new Sunny.UI.UIPanel();
+            this.TLP_INTENSITY = new Sunny.UI.UITableLayoutPanel();
+            this.PNL_INTENSITY_PATH = new Sunny.UI.UIPanel();
+            this.BTN_INENSITY_PATH_SEARCH = new Sunny.UI.UIButton();
+            this.BTN_IMAGE_OPEN = new Sunny.UI.UISymbolButton();
+            this.BTN_IMAGE_FUSION = new Sunny.UI.UISymbolButton();
             this.MainUIPanel = new Sunny.UI.UIPanel();
-            this.btnOpenIntensity = new Sunny.UI.UISymbolButton();
             this.ViewerHost = new System.Windows.Forms.Integration.ElementHost();
             this.MainUITLP.SuspendLayout();
             this.ButtonUITLP.SuspendLayout();
+            this.uiTableLayoutPanel1.SuspendLayout();
+            this.TLP_INTENSITY.SuspendLayout();
             this.MainUIPanel.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -46,7 +53,7 @@
             this.MainUITLP.ColumnCount = 3;
             this.MainUITLP.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.MainUITLP.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.MainUITLP.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 228F));
+            this.MainUITLP.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 320F));
             this.MainUITLP.Controls.Add(this.ButtonUITLP, 2, 0);
             this.MainUITLP.Controls.Add(this.MainUIPanel, 0, 0);
             this.MainUITLP.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -65,59 +72,147 @@
             this.ButtonUITLP.AutoSize = true;
             this.ButtonUITLP.ColumnCount = 1;
             this.ButtonUITLP.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.ButtonUITLP.Controls.Add(this.btnFusion, 0, 2);
-            this.ButtonUITLP.Controls.Add(this.btnOpenZMap, 0, 1);
-            this.ButtonUITLP.Controls.Add(this.btnOpenIntensity, 0, 0);
-            this.ButtonUITLP.Dock = System.Windows.Forms.DockStyle.Right;
-            this.ButtonUITLP.Location = new System.Drawing.Point(1066, 0);
+            this.ButtonUITLP.Controls.Add(this.uiTableLayoutPanel1, 0, 2);
+            this.ButtonUITLP.Controls.Add(this.TLP_INTENSITY, 0, 1);
+            this.ButtonUITLP.Controls.Add(this.BTN_IMAGE_OPEN, 0, 0);
+            this.ButtonUITLP.Controls.Add(this.BTN_IMAGE_FUSION, 0, 3);
+            this.ButtonUITLP.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.ButtonUITLP.Location = new System.Drawing.Point(970, 0);
             this.ButtonUITLP.Margin = new System.Windows.Forms.Padding(0, 0, 2, 0);
             this.ButtonUITLP.Name = "ButtonUITLP";
-            this.ButtonUITLP.RowCount = 4;
+            this.ButtonUITLP.RowCount = 5;
             this.ButtonUITLP.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
             this.ButtonUITLP.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
             this.ButtonUITLP.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
             this.ButtonUITLP.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
-            this.ButtonUITLP.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.ButtonUITLP.Size = new System.Drawing.Size(223, 820);
+            this.ButtonUITLP.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
+            this.ButtonUITLP.Size = new System.Drawing.Size(319, 820);
             this.ButtonUITLP.TabIndex = 0;
             this.ButtonUITLP.TagString = null;
             // 
-            // btnFusion
+            // uiTableLayoutPanel1
             // 
-            this.btnFusion.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btnFusion.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.btnFusion.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(210)))), ((int)(((byte)(230)))), ((int)(((byte)(255)))));
-            this.btnFusion.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.btnFusion.ForeColor = System.Drawing.Color.Black;
-            this.btnFusion.Location = new System.Drawing.Point(3, 83);
-            this.btnFusion.MinimumSize = new System.Drawing.Size(1, 1);
-            this.btnFusion.Name = "btnFusion";
-            this.btnFusion.Size = new System.Drawing.Size(217, 34);
-            this.btnFusion.Symbol = 559469;
-            this.btnFusion.SymbolColor = System.Drawing.Color.Black;
-            this.btnFusion.TabIndex = 2;
-            this.btnFusion.Text = "3D Fusion";
-            this.btnFusion.TipsFont = new System.Drawing.Font("굴림", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.btnFusion.Click += new System.EventHandler(this.btnFusion_Click);
+            this.uiTableLayoutPanel1.ColumnCount = 2;
+            this.uiTableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 78.34101F));
+            this.uiTableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 21.65899F));
+            this.uiTableLayoutPanel1.Controls.Add(this.BTN_ZMAP_PATH_SEARCH, 1, 0);
+            this.uiTableLayoutPanel1.Controls.Add(this.PNL_ZMAP_PATH, 0, 0);
+            this.uiTableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.uiTableLayoutPanel1.Location = new System.Drawing.Point(3, 83);
+            this.uiTableLayoutPanel1.Name = "uiTableLayoutPanel1";
+            this.uiTableLayoutPanel1.RowCount = 1;
+            this.uiTableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.uiTableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.uiTableLayoutPanel1.Size = new System.Drawing.Size(313, 34);
+            this.uiTableLayoutPanel1.TabIndex = 12;
+            this.uiTableLayoutPanel1.TagString = null;
             // 
-            // btnOpenZMap
+            // BTN_ZMAP_PATH_SEARCH
             // 
-            this.btnOpenZMap.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btnOpenZMap.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.btnOpenZMap.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(210)))), ((int)(((byte)(230)))), ((int)(((byte)(255)))));
-            this.btnOpenZMap.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.btnOpenZMap.ForeColor = System.Drawing.Color.Black;
-            this.btnOpenZMap.Location = new System.Drawing.Point(3, 43);
-            this.btnOpenZMap.MinimumSize = new System.Drawing.Size(1, 1);
-            this.btnOpenZMap.Name = "btnOpenZMap";
-            this.btnOpenZMap.Radius = 3;
-            this.btnOpenZMap.Size = new System.Drawing.Size(217, 34);
-            this.btnOpenZMap.Symbol = 361893;
-            this.btnOpenZMap.SymbolColor = System.Drawing.Color.Black;
-            this.btnOpenZMap.TabIndex = 1;
-            this.btnOpenZMap.Text = "ZMap Open";
-            this.btnOpenZMap.TipsFont = new System.Drawing.Font("굴림", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.btnOpenZMap.Click += new System.EventHandler(this.btnOpenZMap_Click);
+            this.BTN_ZMAP_PATH_SEARCH.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.BTN_ZMAP_PATH_SEARCH.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.BTN_ZMAP_PATH_SEARCH.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.BTN_ZMAP_PATH_SEARCH.Location = new System.Drawing.Point(248, 3);
+            this.BTN_ZMAP_PATH_SEARCH.MinimumSize = new System.Drawing.Size(1, 1);
+            this.BTN_ZMAP_PATH_SEARCH.Name = "BTN_ZMAP_PATH_SEARCH";
+            this.BTN_ZMAP_PATH_SEARCH.Size = new System.Drawing.Size(62, 28);
+            this.BTN_ZMAP_PATH_SEARCH.TabIndex = 13;
+            this.BTN_ZMAP_PATH_SEARCH.Text = "...";
+            this.BTN_ZMAP_PATH_SEARCH.TipsFont = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.BTN_ZMAP_PATH_SEARCH.Click += new System.EventHandler(this.BTN_PICK_ZMAP_Click);
+            // 
+            // PNL_ZMAP_PATH
+            // 
+            this.PNL_ZMAP_PATH.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.PNL_ZMAP_PATH.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.PNL_ZMAP_PATH.Location = new System.Drawing.Point(4, 5);
+            this.PNL_ZMAP_PATH.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.PNL_ZMAP_PATH.MinimumSize = new System.Drawing.Size(1, 1);
+            this.PNL_ZMAP_PATH.Name = "PNL_ZMAP_PATH";
+            this.PNL_ZMAP_PATH.Size = new System.Drawing.Size(237, 24);
+            this.PNL_ZMAP_PATH.TabIndex = 11;
+            this.PNL_ZMAP_PATH.Text = null;
+            this.PNL_ZMAP_PATH.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // TLP_INTENSITY
+            // 
+            this.TLP_INTENSITY.ColumnCount = 2;
+            this.TLP_INTENSITY.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 78.34101F));
+            this.TLP_INTENSITY.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 21.65899F));
+            this.TLP_INTENSITY.Controls.Add(this.PNL_INTENSITY_PATH, 0, 0);
+            this.TLP_INTENSITY.Controls.Add(this.BTN_INENSITY_PATH_SEARCH, 1, 0);
+            this.TLP_INTENSITY.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.TLP_INTENSITY.Location = new System.Drawing.Point(3, 43);
+            this.TLP_INTENSITY.Name = "TLP_INTENSITY";
+            this.TLP_INTENSITY.RowCount = 1;
+            this.TLP_INTENSITY.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.TLP_INTENSITY.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.TLP_INTENSITY.Size = new System.Drawing.Size(313, 34);
+            this.TLP_INTENSITY.TabIndex = 11;
+            this.TLP_INTENSITY.TagString = null;
+            // 
+            // PNL_INTENSITY_PATH
+            // 
+            this.PNL_INTENSITY_PATH.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.PNL_INTENSITY_PATH.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.PNL_INTENSITY_PATH.Location = new System.Drawing.Point(4, 5);
+            this.PNL_INTENSITY_PATH.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.PNL_INTENSITY_PATH.MinimumSize = new System.Drawing.Size(1, 1);
+            this.PNL_INTENSITY_PATH.Name = "PNL_INTENSITY_PATH";
+            this.PNL_INTENSITY_PATH.Size = new System.Drawing.Size(237, 24);
+            this.PNL_INTENSITY_PATH.TabIndex = 11;
+            this.PNL_INTENSITY_PATH.Text = null;
+            this.PNL_INTENSITY_PATH.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // BTN_INENSITY_PATH_SEARCH
+            // 
+            this.BTN_INENSITY_PATH_SEARCH.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.BTN_INENSITY_PATH_SEARCH.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.BTN_INENSITY_PATH_SEARCH.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.BTN_INENSITY_PATH_SEARCH.Location = new System.Drawing.Point(248, 3);
+            this.BTN_INENSITY_PATH_SEARCH.MinimumSize = new System.Drawing.Size(1, 1);
+            this.BTN_INENSITY_PATH_SEARCH.Name = "BTN_INENSITY_PATH_SEARCH";
+            this.BTN_INENSITY_PATH_SEARCH.Size = new System.Drawing.Size(62, 28);
+            this.BTN_INENSITY_PATH_SEARCH.TabIndex = 12;
+            this.BTN_INENSITY_PATH_SEARCH.Text = "...";
+            this.BTN_INENSITY_PATH_SEARCH.TipsFont = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.BTN_INENSITY_PATH_SEARCH.Click += new System.EventHandler(this.BTN_PICK_INTENSITY_Click);
+            // 
+            // BTN_IMAGE_OPEN
+            // 
+            this.BTN_IMAGE_OPEN.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.BTN_IMAGE_OPEN.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.BTN_IMAGE_OPEN.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(210)))), ((int)(((byte)(230)))), ((int)(((byte)(255)))));
+            this.BTN_IMAGE_OPEN.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.BTN_IMAGE_OPEN.ForeColor = System.Drawing.Color.Black;
+            this.BTN_IMAGE_OPEN.Location = new System.Drawing.Point(3, 3);
+            this.BTN_IMAGE_OPEN.MinimumSize = new System.Drawing.Size(1, 1);
+            this.BTN_IMAGE_OPEN.Name = "BTN_IMAGE_OPEN";
+            this.BTN_IMAGE_OPEN.Size = new System.Drawing.Size(313, 34);
+            this.BTN_IMAGE_OPEN.Symbol = 61893;
+            this.BTN_IMAGE_OPEN.SymbolColor = System.Drawing.Color.Black;
+            this.BTN_IMAGE_OPEN.TabIndex = 7;
+            this.BTN_IMAGE_OPEN.Text = "Image Open";
+            this.BTN_IMAGE_OPEN.TipsFont = new System.Drawing.Font("굴림", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.BTN_IMAGE_OPEN.Click += new System.EventHandler(this.BTN_IMAGE_OPEN_Click);
+            // 
+            // BTN_IMAGE_FUSION
+            // 
+            this.BTN_IMAGE_FUSION.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.BTN_IMAGE_FUSION.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.BTN_IMAGE_FUSION.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(210)))), ((int)(((byte)(230)))), ((int)(((byte)(255)))));
+            this.BTN_IMAGE_FUSION.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.BTN_IMAGE_FUSION.ForeColor = System.Drawing.Color.Black;
+            this.BTN_IMAGE_FUSION.Location = new System.Drawing.Point(3, 123);
+            this.BTN_IMAGE_FUSION.MinimumSize = new System.Drawing.Size(1, 1);
+            this.BTN_IMAGE_FUSION.Name = "BTN_IMAGE_FUSION";
+            this.BTN_IMAGE_FUSION.Size = new System.Drawing.Size(313, 34);
+            this.BTN_IMAGE_FUSION.Symbol = 559469;
+            this.BTN_IMAGE_FUSION.SymbolColor = System.Drawing.Color.Black;
+            this.BTN_IMAGE_FUSION.TabIndex = 5;
+            this.BTN_IMAGE_FUSION.Text = "3D Fusion";
+            this.BTN_IMAGE_FUSION.TipsFont = new System.Drawing.Font("굴림", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.BTN_IMAGE_FUSION.Click += new System.EventHandler(this.BTN_IMAGE_FUSION_Click);
             // 
             // MainUIPanel
             // 
@@ -130,28 +225,10 @@
             this.MainUIPanel.MinimumSize = new System.Drawing.Size(1, 1);
             this.MainUIPanel.Name = "MainUIPanel";
             this.MainUIPanel.Padding = new System.Windows.Forms.Padding(3);
-            this.MainUIPanel.Size = new System.Drawing.Size(1058, 814);
+            this.MainUIPanel.Size = new System.Drawing.Size(966, 814);
             this.MainUIPanel.TabIndex = 2;
             this.MainUIPanel.Text = "MainUIPanel";
             this.MainUIPanel.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // btnOpenIntensity
-            // 
-            this.btnOpenIntensity.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btnOpenIntensity.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.btnOpenIntensity.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(210)))), ((int)(((byte)(230)))), ((int)(((byte)(255)))));
-            this.btnOpenIntensity.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.btnOpenIntensity.ForeColor = System.Drawing.Color.Black;
-            this.btnOpenIntensity.Location = new System.Drawing.Point(3, 3);
-            this.btnOpenIntensity.MinimumSize = new System.Drawing.Size(1, 1);
-            this.btnOpenIntensity.Name = "btnOpenIntensity";
-            this.btnOpenIntensity.Size = new System.Drawing.Size(217, 34);
-            this.btnOpenIntensity.Symbol = 61893;
-            this.btnOpenIntensity.SymbolColor = System.Drawing.Color.Black;
-            this.btnOpenIntensity.TabIndex = 0;
-            this.btnOpenIntensity.Text = "Intensity Open";
-            this.btnOpenIntensity.TipsFont = new System.Drawing.Font("굴림", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.btnOpenIntensity.Click += new System.EventHandler(this.btnOpenIntensity_Click);
             // 
             // ViewerHost
             // 
@@ -160,7 +237,7 @@
             this.ViewerHost.Location = new System.Drawing.Point(3, 3);
             this.ViewerHost.Margin = new System.Windows.Forms.Padding(0);
             this.ViewerHost.Name = "ViewerHost";
-            this.ViewerHost.Size = new System.Drawing.Size(1052, 808);
+            this.ViewerHost.Size = new System.Drawing.Size(960, 808);
             this.ViewerHost.TabIndex = 0;
             this.ViewerHost.Text = "elementHost1";
             this.ViewerHost.Child = null;
@@ -179,6 +256,8 @@
             this.MainUITLP.ResumeLayout(false);
             this.MainUITLP.PerformLayout();
             this.ButtonUITLP.ResumeLayout(false);
+            this.uiTableLayoutPanel1.ResumeLayout(false);
+            this.TLP_INTENSITY.ResumeLayout(false);
             this.MainUIPanel.ResumeLayout(false);
             this.ResumeLayout(false);
 
@@ -188,11 +267,16 @@
 
         private Sunny.UI.UITableLayoutPanel MainUITLP;
         private Sunny.UI.UITableLayoutPanel ButtonUITLP;
-        private Sunny.UI.UISymbolButton btnFusion;
-        private Sunny.UI.UISymbolButton btnOpenZMap;
         private Sunny.UI.UIPanel MainUIPanel;
-        private Sunny.UI.UISymbolButton btnOpenIntensity;
         private System.Windows.Forms.Integration.ElementHost ViewerHost;
+        private Sunny.UI.UISymbolButton BTN_IMAGE_OPEN;
+        private Sunny.UI.UISymbolButton BTN_IMAGE_FUSION;
+        private Sunny.UI.UITableLayoutPanel TLP_INTENSITY;
+        private Sunny.UI.UIPanel PNL_INTENSITY_PATH;
+        private Sunny.UI.UIButton BTN_INENSITY_PATH_SEARCH;
+        private Sunny.UI.UITableLayoutPanel uiTableLayoutPanel1;
+        private Sunny.UI.UIButton BTN_ZMAP_PATH_SEARCH;
+        private Sunny.UI.UIPanel PNL_ZMAP_PATH;
     }
 }
 

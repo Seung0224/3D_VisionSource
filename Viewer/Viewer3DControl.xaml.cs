@@ -117,8 +117,6 @@ namespace _3D_VisionSource.Viewer
             var oitProp = model.GetType().GetProperty("EnableOIT");
             if (oitProp != null && oitProp.CanWrite) oitProp.SetValue(model, true, null);
 
-            // ★ 여기서 더 이상 colors를 덮어쓰지 않는다 ★
-
             Viewport.Items.Clear();
             Viewport.Items.Add(model);
 
