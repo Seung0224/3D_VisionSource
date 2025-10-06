@@ -1,7 +1,6 @@
-﻿using SharpDX;
-using System;
+﻿using System;
+using SharpDX;
 using System.Linq;
-using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using HelixToolkit.Wpf.SharpDX;
@@ -61,9 +60,7 @@ namespace _3D_VisionSource.Viewer
             cam.FarPlaneDistance = Math.Max(10.0, r * 20.0);
         }
 
-        public void LoadPoints(System.Windows.Media.Media3D.Point3D[] pts,
-                               System.Windows.Media.Color[] cols,
-                               double pointSize = 2.0)
+        public void LoadPoints(System.Windows.Media.Media3D.Point3D[] pts, System.Windows.Media.Color[] cols, double pointSize = 2.0)
         {
             if (pts == null || cols == null || pts.Length == 0 || cols.Length != pts.Length)
                 return;
@@ -123,5 +120,95 @@ namespace _3D_VisionSource.Viewer
             FitCameraToPoints(pts);
             Viewport.ZoomExtents();
         }
+
+        public void OverlayLineLoops(System.Windows.Media.Media3D.Point3D[][] loops, System.Windows.Media.Color color, float thickness = 10f)
+        {
+            if (loops == null || loops.Length == 0) return;
+
+            var positions = new Vector3Collection();
+            var indices = new IntCollection();
+            int baseIdx = 0;
+
+            foreach (var loop in loops)
+            {
+                if (loop == null || loop.Length < 2) continue;
+                for (int i = 0; i < loop.Length; i++)
+                    positions.Add(new Vector3((float)loop[i].X, (float)loop[i].Y, (float)loop[i].Z));
+
+                for (int i = 0; i < loop.Length; i++)
+                {
+                    int a = baseIdx + i;
+                    int b = baseIdx + ((i + 1) % loop.Length);
+                    indices.Add(a);
+                    indices.Add(b);
+                }
+                baseIdx += loop.Length;
+            }
+
+            var lineGeom = new LineGeometry3D
+            {
+                Positions = positions,
+                Indices = indices
+            };
+
+            var m = new LineGeometryModel3D
+            {
+                Geometry = lineGeom,
+                Color = color,
+                Thickness = thickness,
+                IsHitTestVisible = false
+            };
+
+            Viewport.Items.Add(m);
+        }
+        public void OverlayFillMeshes(HelixToolkit.Wpf.SharpDX.MeshGeometry3D[] meshes,
+                              System.Windows.Media.Color color,
+                              float opacity = 0.6f)   // 조금 진하게 시작
+        {
+            if (meshes == null || meshes.Length == 0) return;
+
+            // 1) 컬러 준비
+            var col4 = new SharpDX.Color4(color.R / 255f, color.G / 255f, color.B / 255f, opacity);
+
+            // 2) 머티리얼: Unlit + Emissive + Diffuse 알파는 0이 아닌 값으로
+            var mat = new HelixToolkit.Wpf.SharpDX.PhongMaterial
+            {
+                // 조명 영향 제거 + 색 고정
+                DiffuseColor = new SharpDX.Color4(1f, 1f, 1f, opacity), // 알파 0 금지!
+                AmbientColor = new SharpDX.Color4(0, 0, 0, 0),
+                EmissiveColor = col4,
+                SpecularColor = new SharpDX.Color4(0, 0, 0, 0),
+                SpecularShininess = 1f
+            };
+
+            // 버전별: Unlit 지원 시 켜기
+            var unlitProp = mat.GetType().GetProperty("EnableUnLit");
+            if (unlitProp != null && unlitProp.CanWrite) unlitProp.SetValue(mat, true, null);
+
+            foreach (var g in meshes)
+            {
+                if (g == null || g.Indices == null || g.Indices.Count < 3) continue; // 삼각형 없으면 skip
+
+                var m = new HelixToolkit.Wpf.SharpDX.MeshGeometryModel3D
+                {
+                    Geometry = g,
+                    Material = mat,
+                    IsHitTestVisible = false,
+                    CullMode = SharpDX.Direct3D11.CullMode.None, // 양면
+                    DepthBias = -1                             // 너무 큰 음수는 피함
+                };
+
+                // 투명도 혼합(OIT) 지원시 켜기
+                var oitProp = m.GetType().GetProperty("EnableOIT");
+                if (oitProp != null && oitProp.CanWrite) oitProp.SetValue(m, true, null);
+
+                // 정렬/렌더순서(투명물 위로 오게)
+                var roProp = m.GetType().GetProperty("RenderOrder");
+                if (roProp != null && roProp.CanWrite) roProp.SetValue(m, 1000, null);
+
+                Viewport.Items.Add(m);
+            }
+        }
+
     }
 }

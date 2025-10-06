@@ -203,7 +203,7 @@ namespace _3D_VisionSource
         private void BTN_PICK_INTENSITY_Click(object sender, EventArgs e) => TryPickAndResolve(pickIntensityFirst: true);
         private void BTN_PICK_ZMAP_Click(object sender, EventArgs e) => TryPickAndResolve(pickIntensityFirst: false);
 
-        private void BTN_IMAGE_FUSION_Click(object sender, EventArgs e)
+        private void BTN_IMAGE_FUSION_Click2(object sender, EventArgs e)
         {
             try
             {
@@ -237,10 +237,81 @@ namespace _3D_VisionSource
                 UIMessageBox.ShowError($"Fusion 실패\n{ex.Message}");
             }
         }
+
+        private void BTN_IMAGE_FUSION_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (!_ctx.IsReady)
+                {
+                    UIMessageTip.ShowWarning("먼저 Intensity/ZMap 이미지를 모두 로드하세요.");
+                    return;
+                }
+
+                var fp = new FusionParams
+                {
+                    Sx = 0.05f,
+                    Sy = 0.05f,
+                    ZScale = 0.001f,
+                    ZOffset = 0f,
+                    InvalidZ = 0,
+                    InvalidZ16 = 0,
+                    CenterOrigin = true
+                };
+
+                var sw = Stopwatch.StartNew();
+                // 0) 포인트클라우드 생성 + 뷰어 표시(기존)
+                var pc = FusionEngine.BuildPointCloudFromFiles(_ctx.IntensityPath, _ctx.ZMapPath, fp);
+                _viewer.LoadPoints(pc.Points, pc.Colors, pointSize: 2.0);
+
+                // 1) Rule-based 검사 + 2D 오버레이
+                var hole = FusionEngine.DetectHolesAndMakeOverlay(
+                    _ctx.IntensityPath, _ctx.ZMapPath, fp,
+                    roiMaskPath: null,          // ROI 있으면 경로 전달
+                    minAreaMm2: 3.0,            // 튜닝값: 최소 면적(mm²)
+                    drawOverlay: true);
+
+                // 2D 오버레이를 UI 어딘가에 보여주기(예: PictureBox 등)
+                if (hole.Overlay2D != null)
+                {
+                    // e.g. pictureBoxOverlay.Image?.Dispose();
+                    // pictureBoxOverlay.Image = hole.Overlay2D;
+                    // 또는 임시 저장:
+                    hole.Overlay2D.Save(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "overlay2d.png"));
+                }
+
+                // 2) 3D 오버레이(결손 외곽선을 라인 루프로 표시)
+                bool fill3D = true; // true=면 채움, false=외곽선
+
+                bool is16;
+                var zRaw = FusionEngine.LoadZRawFromFile(_ctx.ZMapPath, out is16);
+
+                if (fill3D)
+                {
+                    var meshes = FusionEngine.Make3DFilledMeshes(hole.ContoursPx, zRaw, fp, is16, neighbor: 2);
+                    _viewer.OverlayFillMeshes(meshes, System.Windows.Media.Colors.Red, 0.35f);
+                }
+                else
+                {
+                    var loopList = FusionEngine.Make3DContourLoops(hole.ContoursPx, zRaw, fp, is16, neighbor: 2);
+                    _viewer.OverlayLineLoops(loopList.ToArray(), System.Windows.Media.Colors.Red, 2.0f);
+                }
+
+                sw.Stop();
+                Console.WriteLine($"Fusion + 검사 완료  (결손 {hole.Components.Count}개, 총면적 {hole.Components.Sum(c => c.AreaMm2):F1} mm²)");
+                UIMessageTip.ShowOk($"Fusion + 검사 완료  (결손 {hole.Components.Count}개, 총면적 {hole.Components.Sum(c => c.AreaMm2):F1} mm²)");
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine(ex);
+                UIMessageBox.ShowError($"Fusion/검사 실패\n{ex.Message}");
+            }
+        }
+
         #endregion
 
         #region Form Events
-      
+
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             _ctx.Clear();

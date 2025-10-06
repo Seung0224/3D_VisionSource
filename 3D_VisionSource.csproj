@@ -5,7 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{E7A551C5-46DC-4770-A76E-06C60865D608}</ProjectGuid>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <RootNamespace>_3D_VisionSource</RootNamespace>
     <AssemblyName>3D_VisionSource</AssemblyName>
     <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
@@ -36,6 +36,9 @@
     <LangVersion>7.3</LangVersion>
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="PresentationCore" />
@@ -99,6 +102,9 @@
       <Version>2.27.3</Version>
     </PackageReference>
     <PackageReference Include="OpenCvSharp4">
+      <Version>4.11.0.20250507</Version>
+    </PackageReference>
+    <PackageReference Include="OpenCvSharp4.Extensions">
       <Version>4.11.0.20250507</Version>
     </PackageReference>
     <PackageReference Include="OpenCvSharp4.runtime.win">
