@@ -1,14 +1,15 @@
-﻿using System;
+﻿using _3D_VisionSource.Viewer;
+using Cyotek.Windows.Forms;
+using OpenCvSharp;
 using Sunny.UI;
+using System;
+using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using System.Drawing;
-using System.Diagnostics;
-using System.Windows.Forms;
-using Cyotek.Windows.Forms;
-using System.Drawing.Imaging;
-using _3D_VisionSource.Viewer;
 using System.Text.RegularExpressions;
+using System.Windows.Forms;
 
 namespace _3D_VisionSource
 {
@@ -17,8 +18,10 @@ namespace _3D_VisionSource
         #region Fields
         // Viwer 및 Image 관련 Fields
         private Viewer3DControl _viewer = null;
-        private Image _intensityImg = null, _zmapImg = null;
+        private Image _intensityImg = null, _zmapImg = null; 
+        private Mat _intensityMat = null, _zmapMat = null;   // 처리용 Mat
         private string _intensityPath = null, _zMapPath = null;
+        private float[,] _zRawCache = null;
 
         // ImageBox 공용 컨텍스트 메뉴
         private readonly UIContextMenuStrip _imageMenu = new UIContextMenuStrip();
@@ -93,20 +96,35 @@ namespace _3D_VisionSource
                     UIMessageTip.ShowWarning("먼저 Intensity/ZMap 이미지를 모두 로드하세요.");
                     return;
                 }
-                if (!(_intensityImg is Bitmap) || !(_zmapImg is Bitmap))
+                if (_intensityMat == null || _intensityMat.Empty() || _zmapMat == null || _zmapMat.Empty())
                 {
-                    UIMessageTip.ShowWarning("이미지가 올바르게 로드되지 않았습니다.");
+                    UIMessageTip.ShowWarning("Mat이 올바르게 로드되지 않았습니다.");
                     return;
                 }
 
-                // Z 변환: 16-bit 고정
-                var zRaw = FusionEngine.LoadZ16FromArgb32((Bitmap)_zmapImg);
-                var res = FusionEngine.Inspect((Bitmap)_intensityImg, zRaw, null, true);
+                // Z 변환: 캐시가 없으면 포맷에 맞춰 1회 변환
+                var zRaw = _zRawCache;
+                if (zRaw == null)
+                {
+                    if (_zmapMat.Type() == MatType.CV_16UC1)
+                        zRaw = FusionEngine.LoadZ16(_zmapMat);
+                    else if (_zmapMat.Type() == MatType.CV_8UC1)
+                        zRaw = FusionEngine.LoadZ8(_zmapMat);
+                    else if (_zmapMat.Type() == MatType.CV_8UC4)
+                        zRaw = FusionEngine.LoadZ16FromArgb32(_zmapMat);
+                    else
+                        throw new NotSupportedException($"지원하지 않는 Z 포맷: {_zmapMat.Type()}");
 
-                // 포인트 클라우드 표출
+                    _zRawCache = zRaw; // 캐시
+                }
+
+                // Inspect: Mat 기반 오버로드 사용 (경로/Bitmap 재-리드 없음)
+                var res = FusionEngine.Inspect(_intensityMat, zRaw, null, true);
+
+                // 포인트 클라우드
                 _viewer.LoadPoints(res.Points, res.Colors, 2.0);
 
-                // 2D 오버레이 갱신
+                // 2D 오버레이
                 if (res.Overlay2D != null)
                 {
                     TWODImageBox.Image = res.Overlay2D;
@@ -116,19 +134,13 @@ namespace _3D_VisionSource
                 // 3D 오버레이: 채움 메쉬 우선, 없으면 라인 루프
                 var meshes = FusionEngine.Make3DFilledMeshes(res, zRaw, 2, 1.5);
                 if (meshes != null && meshes.Length > 0)
-                {
                     _viewer.OverlayFillMeshes(meshes, System.Windows.Media.Colors.Red, 0.35f);
-                }
                 else
                 {
                     var loops = FusionEngine.Make3DContourLoops(res, zRaw, 2);
                     if (loops != null && loops.Count > 0)
                         _viewer.OverlayLineLoops(loops.ToArray(), System.Windows.Media.Colors.Red, 2.0f);
                 }
-
-                // (통계 등은 필요시 UI에 표시)
-                var compCount = (res.CompLabels != null) ? res.CompLabels.Count : 0;
-                var totalArea = (res.CompAreaMm2 != null) ? res.CompAreaMm2.Sum() : 0.0;
             }
             catch (Exception ex)
             {
@@ -136,6 +148,7 @@ namespace _3D_VisionSource
                 UIMessageBox.ShowError("Fusion 실패\n" + ex.Message);
             }
         }
+
 
         /// Intensity 전용 선택
         private void BTN_PICK_INTENSITY_Click(object sender, EventArgs e) { SelectAndResolve(true); }
@@ -213,6 +226,35 @@ namespace _3D_VisionSource
             }
 
             RefreshUI();
+
+            try
+            {
+                // 처리용 Mat 로드 (Unchanged로 원본 그대로)
+                _intensityMat?.Dispose();
+                _zmapMat?.Dispose();
+                _intensityMat = string.IsNullOrEmpty(_intensityPath) ? null : Cv2.ImRead(_intensityPath, ImreadModes.Unchanged);
+                _zmapMat = string.IsNullOrEmpty(_zMapPath) ? null : Cv2.ImRead(_zMapPath, ImreadModes.Unchanged);
+
+                // Z 캐시 미리 생성(선택): 포맷에 맞춰 1회 변환
+                _zRawCache = null;
+                if (_zmapMat != null && !_zmapMat.Empty())
+                {
+                    if (_zmapMat.Type() == MatType.CV_16UC1)
+                        _zRawCache = FusionEngine.LoadZ16(_zmapMat);
+                    else if (_zmapMat.Type() == MatType.CV_8UC1)
+                        _zRawCache = FusionEngine.LoadZ8(_zmapMat);
+                    else if (_zmapMat.Type() == MatType.CV_8UC4) // 32bpp ARGB → BGRA
+                        _zRawCache = FusionEngine.LoadZ16FromArgb32(_zmapMat);
+                    else
+                        UIMessageTip.ShowWarning($"지원하지 않는 Z 포맷: {_zmapMat.Type()}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine(ex);
+                UIMessageTip.ShowWarning("Mat 로드 실패: " + ex.Message);
+            }
+
         }
         /// 패널 텍스트 및 2D 프리뷰 동시 갱신
         private void RefreshUI()
@@ -300,6 +342,10 @@ namespace _3D_VisionSource
         {
             try { if (_intensityImg != null) { _intensityImg.Dispose(); _intensityImg = null; } } catch { }
             try { if (_zmapImg != null) { _zmapImg.Dispose(); _zmapImg = null; } } catch { }
+
+            try { _intensityMat?.Dispose(); _intensityMat = null; } catch { }
+            try { _zmapMat?.Dispose(); _zmapMat = null; } catch { }
+
             try { IntensityImageBox.Image = null; } catch { }
             try { ZMapImageBox.Image = null; } catch { }
 
@@ -307,6 +353,7 @@ namespace _3D_VisionSource
             try { ViewerHost.Child = null; } catch { }
             try { ViewerHost.Dispose(); } catch { }
         }
+
         #endregion
 
         #region 이미지 파일 경로 해석기

@@ -51,177 +51,71 @@ namespace _3D_VisionSource
 
         public enum ArgbByteIndex : int { B = 0, G = 1, R = 2, A = 3 }
 
-        /// <summary>
-        /// Format32bppArgb 비트맵에서 16-bit 깊이를 추출.
-        /// 기본은 Little-Endian(Low=B, High=G) 가정. 필요 시 채널/엔디안 인자로 조정.
-        /// </summary>
-        public static float[,] LoadZ16FromArgb32(Bitmap zBmp,ArgbByteIndex lowByte = ArgbByteIndex.B,ArgbByteIndex highByte = ArgbByteIndex.G, bool bigEndian = false)
-        {
-            if (zBmp == null) throw new ArgumentNullException(nameof(zBmp));
-            if (zBmp.PixelFormat != PixelFormat.Format32bppArgb)
-                throw new NotSupportedException($"Expected Format32bppArgb, got {zBmp.PixelFormat}.");
+        // 16비트 값의 '하위 8비트'에 쓸 채널(기본값: B 채널)
+        // 16비트 값의 '상위 8비트'에 쓸 채널(기본값: G 채널)
+        // 바이트 결합 순서: false=리틀엔디안, true=빅엔디안
+        // 이미지 저장 형식의따라서 B와 G값 이 바뀔수도있음 그래서 bigEndian 옵션도 추가
+        // 결국 여기에서 반환되는값이 깊이 값이고 BG채널이 깊이값으로 사용됨
 
-            int w = zBmp.Width, h = zBmp.Height;
+        public static float[,] LoadZ16FromArgb32(Mat zMat)
+        {
+            ArgbByteIndex lowByte = ArgbByteIndex.B;
+            ArgbByteIndex highByte = ArgbByteIndex.G;
+            bool bigEndian = false;
+
+            int h = zMat.Rows, w = zMat.Cols;
             var outArr = new float[h, w];
 
-            var rect = new System.Drawing.Rectangle(0, 0, w, h);
-            var data = zBmp.LockBits(rect, ImageLockMode.ReadOnly, zBmp.PixelFormat);
-            try
+            var idx = zMat.GetGenericIndexer<Vec4b>();
+            int lo = (int)lowByte, hi = (int)highByte;
+
+            for (int y = 0; y < h; y++)
             {
-                int stride = data.Stride; // bytes/row
-                int low = (int)lowByte, high = (int)highByte;
-
-                unsafe
+                for (int x = 0; x < w; x++)
                 {
-                    byte* basePtr = (byte*)data.Scan0;
-                    for (int y = 0; y < h; y++)
-                    {
-                        byte* row = basePtr + y * stride;
-                        for (int x = 0; x < w; x++)
-                        {
-                            byte bLow = row[x * 4 + low];
-                            byte bHigh = row[x * 4 + high];
+                    var px = idx[y, x]; // BGRA
+                    byte bLow = px[lo];
+                    byte bHigh = px[hi];
 
-                            ushort v = bigEndian
-                                ? (ushort)((bLow << 8) | bHigh)     // [low param] actually carries high-order when bigEndian=true
-                                : (ushort)(bLow | (bHigh << 8));     // default: little-endian (low then high)
+                    ushort v = bigEndian
+                        ? (ushort)((bLow << 8) | bHigh)
+                        : (ushort)(bLow | (bHigh << 8));
 
-                            outArr[y, x] = v; // 0..65535
-                        }
-                    }
+                    outArr[y, x] = v;
                 }
             }
-            finally
-            {
-                zBmp.UnlockBits(data);
-            }
-
             return outArr;
         }
-        /// <summary>
-        /// Format32bppArgb 비트맵에서 8-bit 휘도(루마)로 추출하여 float[,] 생성.
-        /// Z가 8-bit로만 저장된 케이스 대응(0..255).
-        /// </summary>
-        public static float[,] LoadZ8FromArgb32Luma(Bitmap zBmp)
+        public static float[,] LoadZ16(Mat zMat)
         {
-            if (zBmp == null) throw new ArgumentNullException(nameof(zBmp));
-            if (zBmp.PixelFormat != PixelFormat.Format32bppArgb)
-                throw new NotSupportedException($"Expected Format32bppArgb, got {zBmp.PixelFormat}.");
-
-            int w = zBmp.Width, h = zBmp.Height;
+            int h = zMat.Rows, w = zMat.Cols;
             var outArr = new float[h, w];
-
-            var rect = new System.Drawing.Rectangle(0, 0, w, h);
-            var data = zBmp.LockBits(rect, ImageLockMode.ReadOnly, zBmp.PixelFormat);
-            try
-            {
-                int stride = data.Stride;
-
-                unsafe
-                {
-                    byte* basePtr = (byte*)data.Scan0;
-                    for (int y = 0; y < h; y++)
-                    {
-                        byte* row = basePtr + y * stride;
-                        for (int x = 0; x < w; x++)
-                        {
-                            // BGRA 순서
-                            byte b = row[x * 4 + 0];
-                            byte g = row[x * 4 + 1];
-                            byte r = row[x * 4 + 2];
-                            // BT.601 luma (0.299R + 0.587G + 0.114B)
-                            int g8 = (int)Math.Round(0.114 * b + 0.587 * g + 0.299 * r);
-                            if (g8 < 0) g8 = 0; else if (g8 > 255) g8 = 255;
-                            outArr[y, x] = (byte)g8; // 0..255
-                        }
-                    }
-                }
-            }
-            finally
-            {
-                zBmp.UnlockBits(data);
-            }
-
+            var idx = zMat.GetGenericIndexer<ushort>();
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                    outArr[y, x] = idx[y, x];
             return outArr;
         }
-        public static float[,] LoadZ16(Bitmap zBmp)
+        public static float[,] LoadZ8(Mat zMat)
         {
-            if (zBmp == null) throw new ArgumentNullException(nameof(zBmp));
-            if (zBmp.PixelFormat != PixelFormat.Format16bppGrayScale)
-                throw new NotSupportedException("ZMap bitmap must be 16bpp grayscale.");
-
-            int w = zBmp.Width, h = zBmp.Height;
+            int h = zMat.Rows, w = zMat.Cols;
             var outArr = new float[h, w];
-
-            var rect = new System.Drawing.Rectangle(0, 0, w, h);
-            var data = zBmp.LockBits(rect, ImageLockMode.ReadOnly, zBmp.PixelFormat);
-            try
-            {
-                int strideBytes = data.Stride;
-                int strideElems = strideBytes / 2;
-
-                unsafe
-                {
-                    ushort* basePtr = (ushort*)data.Scan0;
-                    for (int y = 0; y < h; y++)
-                    {
-                        ushort* row = basePtr + y * strideElems;
-                        for (int x = 0; x < w; x++)
-                            outArr[y, x] = row[x]; // 0..65535
-                    }
-                }
-            }
-            finally { zBmp.UnlockBits(data); }
-
-            return outArr;
-        }
-        public static float[,] LoadZ8(Bitmap zBmp)
-        {
-            if (zBmp == null) throw new ArgumentNullException(nameof(zBmp));
-            if (zBmp.PixelFormat != PixelFormat.Format8bppIndexed)
-                throw new NotSupportedException("ZMap bitmap must be 8bpp indexed (grayscale).");
-
-            int w = zBmp.Width, h = zBmp.Height;
-            var outArr = new float[h, w];
-
-            var rect = new System.Drawing.Rectangle(0, 0, w, h);
-            var data = zBmp.LockBits(rect, ImageLockMode.ReadOnly, zBmp.PixelFormat);
-            try
-            {
-                int stride = data.Stride;
-                unsafe
-                {
-                    byte* basePtr = (byte*)data.Scan0;
-                    for (int y = 0; y < h; y++)
-                    {
-                        byte* row = basePtr + y * stride;
-                        for (int x = 0; x < w; x++)
-                            outArr[y, x] = row[x]; // 0..255
-                    }
-                }
-            }
-            finally { zBmp.UnlockBits(data); }
-
+            var idx = zMat.GetGenericIndexer<byte>();
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                    outArr[y, x] = idx[y, x];
             return outArr;
         }
 
         /// Intensity/ZMap에서 포인트클라우드 생성 + 홀검출 + 2D 오버레이 생성
         // === [ADD] 주력 오버로드: Bitmap 입력, 16-bit 고정 ===
-        public static InspectionResults Inspect(Bitmap intensityBmp, float[,] zRaw, string roiMaskPath = null, bool drawOverlay = true)
+        public static InspectionResults Inspect(Mat intensityMat, float[,] zRaw, string roiMaskPath = null, bool drawOverlay = true)
         {
-            if (intensityBmp == null) throw new ArgumentNullException(nameof(intensityBmp));
-            if (zRaw == null) throw new ArgumentNullException(nameof(zRaw));
-
-            // Bitmap -> Mat (표시 비트맵과 동일한 입력을 그대로 사용)
-            Mat imRaw = null;
             try
             {
-                // OpenCvSharp의 Bitmap -> Mat 변환 (채널/타입은 아래에서 다시 정규화)
-                imRaw = OpenCvSharp.Extensions.BitmapConverter.ToMat(intensityBmp);
-
-                int H = Math.Min(imRaw.Rows, zRaw.GetLength(0));
-                int W = Math.Min(imRaw.Cols, zRaw.GetLength(1));
-                var im = imRaw[0, H, 0, W];
+                int H = Math.Min(intensityMat.Rows, zRaw.GetLength(0));
+                int W = Math.Min(intensityMat.Cols, zRaw.GetLength(1));
+                var im = intensityMat[0, H, 0, W];
 
                 // 유효/무효 마스크: 항상 InvalidZ16 기준
                 var mask = new bool[H, W];
@@ -427,7 +321,10 @@ namespace _3D_VisionSource
                     Overlay2D = overlayBmp
                 };
             }
-            finally { if (imRaw != null) imRaw.Dispose(); }
+            catch
+            {
+                throw;
+            }
         }
 
 
