@@ -30,6 +30,11 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.MainUITLP = new Sunny.UI.UITableLayoutPanel();
+            this.TWODImageBox = new Cyotek.Windows.Forms.ImageBox();
+            this.ZMapImageBox = new Cyotek.Windows.Forms.ImageBox();
+            this.THREEDPanelUI = new Sunny.UI.UIPanel();
+            this.TWODPanelUI = new Sunny.UI.UIPanel();
+            this.ZMapPanelUI = new Sunny.UI.UIPanel();
             this.ButtonUITLP = new Sunny.UI.UITableLayoutPanel();
             this.uiTableLayoutPanel1 = new Sunny.UI.UITableLayoutPanel();
             this.BTN_ZMAP_PATH_SEARCH = new Sunny.UI.UIButton();
@@ -37,17 +42,12 @@
             this.TLP_INTENSITY = new Sunny.UI.UITableLayoutPanel();
             this.PNL_INTENSITY_PATH = new Sunny.UI.UIPanel();
             this.BTN_INENSITY_PATH_SEARCH = new Sunny.UI.UIButton();
-            this.BTN_IMAGE_OPEN = new Sunny.UI.UISymbolButton();
             this.BTN_IMAGE_FUSION = new Sunny.UI.UISymbolButton();
             this.MainUIPanel = new Sunny.UI.UIPanel();
             this.ViewerHost = new System.Windows.Forms.Integration.ElementHost();
+            this.BTN_IMAGE_OPEN = new Sunny.UI.UISymbolButton();
             this.IntensityPanelUI = new Sunny.UI.UIPanel();
-            this.ZMapPanelUI = new Sunny.UI.UIPanel();
-            this.TWODPanelUI = new Sunny.UI.UIPanel();
-            this.THREEDPanelUI = new Sunny.UI.UIPanel();
             this.IntensityImageBox = new Cyotek.Windows.Forms.ImageBox();
-            this.ZMapImageBox = new Cyotek.Windows.Forms.ImageBox();
-            this.TWODImageBox = new Cyotek.Windows.Forms.ImageBox();
             this.MainUITLP.SuspendLayout();
             this.ButtonUITLP.SuspendLayout();
             this.uiTableLayoutPanel1.SuspendLayout();
@@ -82,6 +82,63 @@
             this.MainUITLP.Size = new System.Drawing.Size(1422, 820);
             this.MainUITLP.TabIndex = 0;
             this.MainUITLP.TagString = null;
+            // 
+            // TWODImageBox
+            // 
+            this.TWODImageBox.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.TWODImageBox.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.TWODImageBox.Location = new System.Drawing.Point(541, 43);
+            this.TWODImageBox.Name = "TWODImageBox";
+            this.TWODImageBox.Size = new System.Drawing.Size(263, 774);
+            this.TWODImageBox.TabIndex = 14;
+            // 
+            // ZMapImageBox
+            // 
+            this.ZMapImageBox.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.ZMapImageBox.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ZMapImageBox.Location = new System.Drawing.Point(272, 43);
+            this.ZMapImageBox.Name = "ZMapImageBox";
+            this.ZMapImageBox.Size = new System.Drawing.Size(263, 774);
+            this.ZMapImageBox.TabIndex = 13;
+            // 
+            // THREEDPanelUI
+            // 
+            this.THREEDPanelUI.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.THREEDPanelUI.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(249)))), ((int)(((byte)(255)))));
+            this.THREEDPanelUI.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.THREEDPanelUI.Location = new System.Drawing.Point(810, 3);
+            this.THREEDPanelUI.MinimumSize = new System.Drawing.Size(1, 1);
+            this.THREEDPanelUI.Name = "THREEDPanelUI";
+            this.THREEDPanelUI.Size = new System.Drawing.Size(263, 34);
+            this.THREEDPanelUI.TabIndex = 11;
+            this.THREEDPanelUI.Text = "3D";
+            this.THREEDPanelUI.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // TWODPanelUI
+            // 
+            this.TWODPanelUI.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.TWODPanelUI.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(249)))), ((int)(((byte)(255)))));
+            this.TWODPanelUI.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.TWODPanelUI.Location = new System.Drawing.Point(541, 3);
+            this.TWODPanelUI.MinimumSize = new System.Drawing.Size(1, 1);
+            this.TWODPanelUI.Name = "TWODPanelUI";
+            this.TWODPanelUI.Size = new System.Drawing.Size(263, 34);
+            this.TWODPanelUI.TabIndex = 10;
+            this.TWODPanelUI.Text = "2D";
+            this.TWODPanelUI.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // ZMapPanelUI
+            // 
+            this.ZMapPanelUI.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.ZMapPanelUI.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(249)))), ((int)(((byte)(255)))));
+            this.ZMapPanelUI.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.ZMapPanelUI.Location = new System.Drawing.Point(272, 3);
+            this.ZMapPanelUI.MinimumSize = new System.Drawing.Size(1, 1);
+            this.ZMapPanelUI.Name = "ZMapPanelUI";
+            this.ZMapPanelUI.Size = new System.Drawing.Size(263, 34);
+            this.ZMapPanelUI.TabIndex = 9;
+            this.ZMapPanelUI.Text = "Z-Map";
+            this.ZMapPanelUI.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // ButtonUITLP
             // 
@@ -192,24 +249,6 @@
             this.BTN_INENSITY_PATH_SEARCH.TipsFont = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.BTN_INENSITY_PATH_SEARCH.Click += new System.EventHandler(this.BTN_PICK_INTENSITY_Click);
             // 
-            // BTN_IMAGE_OPEN
-            // 
-            this.BTN_IMAGE_OPEN.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.BTN_IMAGE_OPEN.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.BTN_IMAGE_OPEN.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(210)))), ((int)(((byte)(230)))), ((int)(((byte)(255)))));
-            this.BTN_IMAGE_OPEN.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.BTN_IMAGE_OPEN.ForeColor = System.Drawing.Color.Black;
-            this.BTN_IMAGE_OPEN.Location = new System.Drawing.Point(1079, 3);
-            this.BTN_IMAGE_OPEN.MinimumSize = new System.Drawing.Size(1, 1);
-            this.BTN_IMAGE_OPEN.Name = "BTN_IMAGE_OPEN";
-            this.BTN_IMAGE_OPEN.Size = new System.Drawing.Size(340, 34);
-            this.BTN_IMAGE_OPEN.Symbol = 61893;
-            this.BTN_IMAGE_OPEN.SymbolColor = System.Drawing.Color.Black;
-            this.BTN_IMAGE_OPEN.TabIndex = 7;
-            this.BTN_IMAGE_OPEN.Text = "Image Open";
-            this.BTN_IMAGE_OPEN.TipsFont = new System.Drawing.Font("굴림", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.BTN_IMAGE_OPEN.Click += new System.EventHandler(this.BTN_IMAGE_OPEN_Click);
-            // 
             // BTN_IMAGE_FUSION
             // 
             this.BTN_IMAGE_FUSION.Cursor = System.Windows.Forms.Cursors.Hand;
@@ -255,6 +294,24 @@
             this.ViewerHost.Text = "elementHost1";
             this.ViewerHost.Child = null;
             // 
+            // BTN_IMAGE_OPEN
+            // 
+            this.BTN_IMAGE_OPEN.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.BTN_IMAGE_OPEN.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.BTN_IMAGE_OPEN.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(210)))), ((int)(((byte)(230)))), ((int)(((byte)(255)))));
+            this.BTN_IMAGE_OPEN.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.BTN_IMAGE_OPEN.ForeColor = System.Drawing.Color.Black;
+            this.BTN_IMAGE_OPEN.Location = new System.Drawing.Point(1079, 3);
+            this.BTN_IMAGE_OPEN.MinimumSize = new System.Drawing.Size(1, 1);
+            this.BTN_IMAGE_OPEN.Name = "BTN_IMAGE_OPEN";
+            this.BTN_IMAGE_OPEN.Size = new System.Drawing.Size(340, 34);
+            this.BTN_IMAGE_OPEN.Symbol = 61893;
+            this.BTN_IMAGE_OPEN.SymbolColor = System.Drawing.Color.Black;
+            this.BTN_IMAGE_OPEN.TabIndex = 7;
+            this.BTN_IMAGE_OPEN.Text = "Image Open";
+            this.BTN_IMAGE_OPEN.TipsFont = new System.Drawing.Font("굴림", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.BTN_IMAGE_OPEN.Click += new System.EventHandler(this.BTN_IMAGE_OPEN_Click);
+            // 
             // IntensityPanelUI
             // 
             this.IntensityPanelUI.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -268,45 +325,6 @@
             this.IntensityPanelUI.Text = "Intensity";
             this.IntensityPanelUI.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // ZMapPanelUI
-            // 
-            this.ZMapPanelUI.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ZMapPanelUI.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(249)))), ((int)(((byte)(255)))));
-            this.ZMapPanelUI.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.ZMapPanelUI.Location = new System.Drawing.Point(272, 3);
-            this.ZMapPanelUI.MinimumSize = new System.Drawing.Size(1, 1);
-            this.ZMapPanelUI.Name = "ZMapPanelUI";
-            this.ZMapPanelUI.Size = new System.Drawing.Size(263, 34);
-            this.ZMapPanelUI.TabIndex = 9;
-            this.ZMapPanelUI.Text = "Z-Map";
-            this.ZMapPanelUI.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // TWODPanelUI
-            // 
-            this.TWODPanelUI.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.TWODPanelUI.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(249)))), ((int)(((byte)(255)))));
-            this.TWODPanelUI.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.TWODPanelUI.Location = new System.Drawing.Point(541, 3);
-            this.TWODPanelUI.MinimumSize = new System.Drawing.Size(1, 1);
-            this.TWODPanelUI.Name = "TWODPanelUI";
-            this.TWODPanelUI.Size = new System.Drawing.Size(263, 34);
-            this.TWODPanelUI.TabIndex = 10;
-            this.TWODPanelUI.Text = "2D";
-            this.TWODPanelUI.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // THREEDPanelUI
-            // 
-            this.THREEDPanelUI.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.THREEDPanelUI.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(249)))), ((int)(((byte)(255)))));
-            this.THREEDPanelUI.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.THREEDPanelUI.Location = new System.Drawing.Point(810, 3);
-            this.THREEDPanelUI.MinimumSize = new System.Drawing.Size(1, 1);
-            this.THREEDPanelUI.Name = "THREEDPanelUI";
-            this.THREEDPanelUI.Size = new System.Drawing.Size(263, 34);
-            this.THREEDPanelUI.TabIndex = 11;
-            this.THREEDPanelUI.Text = "3D";
-            this.THREEDPanelUI.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
             // IntensityImageBox
             // 
             this.IntensityImageBox.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -315,24 +333,6 @@
             this.IntensityImageBox.Name = "IntensityImageBox";
             this.IntensityImageBox.Size = new System.Drawing.Size(263, 774);
             this.IntensityImageBox.TabIndex = 12;
-            // 
-            // ZMapImageBox
-            // 
-            this.ZMapImageBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ZMapImageBox.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ZMapImageBox.Location = new System.Drawing.Point(272, 43);
-            this.ZMapImageBox.Name = "ZMapImageBox";
-            this.ZMapImageBox.Size = new System.Drawing.Size(263, 774);
-            this.ZMapImageBox.TabIndex = 13;
-            // 
-            // TWODImageBox
-            // 
-            this.TWODImageBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.TWODImageBox.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.TWODImageBox.Location = new System.Drawing.Point(541, 43);
-            this.TWODImageBox.Name = "TWODImageBox";
-            this.TWODImageBox.Size = new System.Drawing.Size(263, 774);
-            this.TWODImageBox.TabIndex = 14;
             // 
             // MainForm
             // 
