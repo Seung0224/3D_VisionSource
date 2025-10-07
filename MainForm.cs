@@ -83,7 +83,7 @@ namespace _3D_VisionSource
         #region Buttons
         /// 이미지 오픈(유형 무관 선택 + 자동 매칭)
         private void BTN_IMAGE_OPEN_Click(object sender, EventArgs e) { SelectAndResolve(true); }
-        /// Fusion 실행(3D/2D 오버레이 포함)
+        // Fusion 수행: 포인트클라우드 생성, 홀검출, 2D/3D 오버레이 표시
         private void BTN_IMAGE_FUSION_Click(object sender, EventArgs e)
         {
             try
@@ -94,51 +94,40 @@ namespace _3D_VisionSource
                     return;
                 }
 
-                var fp = new FusionParams
+                var res = FusionEngine.Inspect(_intensityPath, _zMapPath, null, true);
+                _viewer.LoadPoints(res.Points, res.Colors, 2.0);
+
+                if (res.Overlay2D != null)
                 {
-                    Sx = 0.05f,
-                    Sy = 0.05f,
-                    ZScale = 0.001f,
-                    ZOffset = 0f,
-                    InvalidZ = 0,
-                    InvalidZ16 = 0,
-                    CenterOrigin = true
-                };
-
-                var pc = FusionEngine.BuildPointCloudFromFiles(_intensityPath, _zMapPath, fp);
-                _viewer.LoadPoints(pc.Points, pc.Colors, 2.0);
-
-                var hole = FusionEngine.DetectHolesAndMakeOverlay(_intensityPath, _zMapPath, fp, null, 3.0, true);
-
-                if (hole.Overlay2D != null)
-                {
-                    TWODImageBox.Image = hole.Overlay2D;
+                    TWODImageBox.Image = res.Overlay2D;
                     TWODImageBox.ZoomToFit();
                 }
 
                 bool is16;
                 var zRaw = FusionEngine.LoadZRawFromFile(_zMapPath, out is16);
 
-                bool fill3D = true;
-                if (fill3D)
+                // 3D 오버레이: 채움 메쉬 우선, 없으면 라인 루프
+                var meshes = FusionEngine.Make3DFilledMeshes(res, zRaw, is16, 2, 1.5);
+                if (meshes != null && meshes.Length > 0)
                 {
-                    var meshes = FusionEngine.Make3DFilledMeshes(hole.ContoursPx, zRaw, fp, is16, 2);
                     _viewer.OverlayFillMeshes(meshes, System.Windows.Media.Colors.Red, 0.35f);
                 }
                 else
                 {
-                    var loopList = FusionEngine.Make3DContourLoops(hole.ContoursPx, zRaw, fp, is16, 2);
-                    _viewer.OverlayLineLoops(loopList.ToArray(), System.Windows.Media.Colors.Red, 2.0f);
+                    var loops = FusionEngine.Make3DContourLoops(res, zRaw, is16, 2);
+                    if (loops != null && loops.Count > 0)
+                        _viewer.OverlayLineLoops(loops.ToArray(), System.Windows.Media.Colors.Red, 2.0f);
                 }
 
-                UIMessageTip.ShowOk("Fusion + 검사 완료  (결손 " + hole.Components.Count + "개, 총면적 " + hole.Components.Sum(c => c.AreaMm2).ToString("F1") + " mm²)");
+                var compCount = (res.CompLabels != null) ? res.CompLabels.Count : 0;
+                var totalArea = (res.CompAreaMm2 != null) ? res.CompAreaMm2.Sum() : 0.0;
             }
             catch (Exception ex)
             {
                 Trace.WriteLine(ex);
-                UIMessageBox.ShowError("Fusion/검사 실패\n" + ex.Message);
             }
         }
+
         /// Intensity 전용 선택
         private void BTN_PICK_INTENSITY_Click(object sender, EventArgs e) { SelectAndResolve(true); }
         /// ZMap 전용 선택
