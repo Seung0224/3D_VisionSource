@@ -93,38 +93,47 @@ namespace _3D_VisionSource
                     UIMessageTip.ShowWarning("먼저 Intensity/ZMap 이미지를 모두 로드하세요.");
                     return;
                 }
+                if (!(_intensityImg is Bitmap) || !(_zmapImg is Bitmap))
+                {
+                    UIMessageTip.ShowWarning("이미지가 올바르게 로드되지 않았습니다.");
+                    return;
+                }
 
-                var res = FusionEngine.Inspect(_intensityPath, _zMapPath, null, true);
+                // Z 변환: 16-bit 고정
+                var zRaw = FusionEngine.LoadZ16FromArgb32((Bitmap)_zmapImg);
+                var res = FusionEngine.Inspect((Bitmap)_intensityImg, zRaw, null, true);
+
+                // 포인트 클라우드 표출
                 _viewer.LoadPoints(res.Points, res.Colors, 2.0);
 
+                // 2D 오버레이 갱신
                 if (res.Overlay2D != null)
                 {
                     TWODImageBox.Image = res.Overlay2D;
                     TWODImageBox.ZoomToFit();
                 }
 
-                bool is16;
-                var zRaw = FusionEngine.LoadZRawFromFile(_zMapPath, out is16);
-
                 // 3D 오버레이: 채움 메쉬 우선, 없으면 라인 루프
-                var meshes = FusionEngine.Make3DFilledMeshes(res, zRaw, is16, 2, 1.5);
+                var meshes = FusionEngine.Make3DFilledMeshes(res, zRaw, 2, 1.5);
                 if (meshes != null && meshes.Length > 0)
                 {
                     _viewer.OverlayFillMeshes(meshes, System.Windows.Media.Colors.Red, 0.35f);
                 }
                 else
                 {
-                    var loops = FusionEngine.Make3DContourLoops(res, zRaw, is16, 2);
+                    var loops = FusionEngine.Make3DContourLoops(res, zRaw, 2);
                     if (loops != null && loops.Count > 0)
                         _viewer.OverlayLineLoops(loops.ToArray(), System.Windows.Media.Colors.Red, 2.0f);
                 }
 
+                // (통계 등은 필요시 UI에 표시)
                 var compCount = (res.CompLabels != null) ? res.CompLabels.Count : 0;
                 var totalArea = (res.CompAreaMm2 != null) ? res.CompAreaMm2.Sum() : 0.0;
             }
             catch (Exception ex)
             {
                 Trace.WriteLine(ex);
+                UIMessageBox.ShowError("Fusion 실패\n" + ex.Message);
             }
         }
 

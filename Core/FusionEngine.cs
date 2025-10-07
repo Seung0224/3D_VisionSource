@@ -1,11 +1,12 @@
-﻿using System;
+﻿using OpenCvSharp;
 using SharpDX;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.Globalization;
 using System.IO;
 using System.Linq;
-using OpenCvSharp;
-using System.Drawing;
-using System.Collections.Generic;
-using System.Globalization;
 using System.Windows.Media.Media3D;
 using HT = HelixToolkit.Wpf.SharpDX;
 using MediaColor = System.Windows.Media.Color;
@@ -47,256 +48,394 @@ namespace _3D_VisionSource
     public static class FusionEngine
     {
         static readonly InspectionParams P = new InspectionParams();
-        /// Z맵을 float[,]로 로드(CV_8UC1/CV_16UC1 지원)
-        public static float[,] LoadZRawFromFile(string zPath, out bool is16bit)
-        {
-            using (var mat = Cv2.ImRead(zPath, ImreadModes.Unchanged))
-            {
-                if (mat.Empty()) throw new InvalidOperationException("ZMap read failed: " + zPath);
-                if (mat.Channels() != 1) throw new NotSupportedException("ZMap must be 1-channel.");
 
-                if (mat.Type() == MatType.CV_16UC1)
+        public enum ArgbByteIndex : int { B = 0, G = 1, R = 2, A = 3 }
+
+        /// <summary>
+        /// Format32bppArgb 비트맵에서 16-bit 깊이를 추출.
+        /// 기본은 Little-Endian(Low=B, High=G) 가정. 필요 시 채널/엔디안 인자로 조정.
+        /// </summary>
+        public static float[,] LoadZ16FromArgb32(Bitmap zBmp,ArgbByteIndex lowByte = ArgbByteIndex.B,ArgbByteIndex highByte = ArgbByteIndex.G, bool bigEndian = false)
+        {
+            if (zBmp == null) throw new ArgumentNullException(nameof(zBmp));
+            if (zBmp.PixelFormat != PixelFormat.Format32bppArgb)
+                throw new NotSupportedException($"Expected Format32bppArgb, got {zBmp.PixelFormat}.");
+
+            int w = zBmp.Width, h = zBmp.Height;
+            var outArr = new float[h, w];
+
+            var rect = new System.Drawing.Rectangle(0, 0, w, h);
+            var data = zBmp.LockBits(rect, ImageLockMode.ReadOnly, zBmp.PixelFormat);
+            try
+            {
+                int stride = data.Stride; // bytes/row
+                int low = (int)lowByte, high = (int)highByte;
+
+                unsafe
                 {
-                    is16bit = true;
-                    int h = mat.Rows, w = mat.Cols;
-                    var outArr = new float[h, w];
-                    var idx = mat.GetGenericIndexer<ushort>();
+                    byte* basePtr = (byte*)data.Scan0;
                     for (int y = 0; y < h; y++)
+                    {
+                        byte* row = basePtr + y * stride;
                         for (int x = 0; x < w; x++)
-                            outArr[y, x] = idx[y, x];
-                    return outArr;
+                        {
+                            byte bLow = row[x * 4 + low];
+                            byte bHigh = row[x * 4 + high];
+
+                            ushort v = bigEndian
+                                ? (ushort)((bLow << 8) | bHigh)     // [low param] actually carries high-order when bigEndian=true
+                                : (ushort)(bLow | (bHigh << 8));     // default: little-endian (low then high)
+
+                            outArr[y, x] = v; // 0..65535
+                        }
+                    }
                 }
-                if (mat.Type() == MatType.CV_8UC1)
-                {
-                    is16bit = false;
-                    int h = mat.Rows, w = mat.Cols;
-                    var outArr = new float[h, w];
-                    var idx = mat.GetGenericIndexer<byte>();
-                    for (int y = 0; y < h; y++)
-                        for (int x = 0; x < w; x++)
-                            outArr[y, x] = idx[y, x];
-                    return outArr;
-                }
-                throw new NotSupportedException("ZMap must be CV_8UC1 or CV_16UC1.");
             }
+            finally
+            {
+                zBmp.UnlockBits(data);
+            }
+
+            return outArr;
         }
-        /// Intensity/ZMap에서 포인트클라우드 생성 + 홀검출 + 2D 오버레이 생성
-        public static InspectionResults Inspect(string intensityPath, string zPath, string roiMaskPath = null, bool drawOverlay = true)
+        /// <summary>
+        /// Format32bppArgb 비트맵에서 8-bit 휘도(루마)로 추출하여 float[,] 생성.
+        /// Z가 8-bit로만 저장된 케이스 대응(0..255).
+        /// </summary>
+        public static float[,] LoadZ8FromArgb32Luma(Bitmap zBmp)
         {
-            var imRaw = Cv2.ImRead(intensityPath, ImreadModes.Unchanged);
-            if (imRaw.Empty()) throw new InvalidOperationException("Intensity read failed: " + intensityPath);
+            if (zBmp == null) throw new ArgumentNullException(nameof(zBmp));
+            if (zBmp.PixelFormat != PixelFormat.Format32bppArgb)
+                throw new NotSupportedException($"Expected Format32bppArgb, got {zBmp.PixelFormat}.");
 
-            bool is16;
-            var zRaw = LoadZRawFromFile(zPath, out is16);
+            int w = zBmp.Width, h = zBmp.Height;
+            var outArr = new float[h, w];
 
-            int H = Math.Min(imRaw.Rows, zRaw.GetLength(0));
-            int W = Math.Min(imRaw.Cols, zRaw.GetLength(1));
-            var im = imRaw[0, H, 0, W];
-
-            var mask = new bool[H, W];
-            int validCount = 0;
-            for (int y = 0; y < H; y++)
-                for (int x = 0; x < W; x++)
-                {
-                    float v = zRaw[y, x];
-                    bool ok = is16 ? (v != P.InvalidZ16) : (v != P.InvalidZ);
-                    mask[y, x] = ok;
-                    if (ok) validCount++;
-                }
-            if (validCount == 0) throw new InvalidOperationException("No valid Z.");
-
-            double cx = P.CenterOrigin ? W / 2.0 : 0.0;
-            double cy = P.CenterOrigin ? H / 2.0 : 0.0;
-
-            var pts = new Point3D[validCount];
-            var cols = new MediaColor[validCount];
-
-            int ch = im.Channels();
-            Mat im8;
-            if (ch == 1)
+            var rect = new System.Drawing.Rectangle(0, 0, w, h);
+            var data = zBmp.LockBits(rect, ImageLockMode.ReadOnly, zBmp.PixelFormat);
+            try
             {
-                if (im.Type() == MatType.CV_8UC1) im8 = im;
-                else
+                int stride = data.Stride;
+
+                unsafe
                 {
-                    im8 = new Mat();
-                    if (im.Type() == MatType.CV_16UC1) im.ConvertTo(im8, MatType.CV_8U, 1.0 / 256.0);
-                    else im.ConvertTo(im8, MatType.CV_8U);
+                    byte* basePtr = (byte*)data.Scan0;
+                    for (int y = 0; y < h; y++)
+                    {
+                        byte* row = basePtr + y * stride;
+                        for (int x = 0; x < w; x++)
+                        {
+                            // BGRA 순서
+                            byte b = row[x * 4 + 0];
+                            byte g = row[x * 4 + 1];
+                            byte r = row[x * 4 + 2];
+                            // BT.601 luma (0.299R + 0.587G + 0.114B)
+                            int g8 = (int)Math.Round(0.114 * b + 0.587 * g + 0.299 * r);
+                            if (g8 < 0) g8 = 0; else if (g8 > 255) g8 = 255;
+                            outArr[y, x] = (byte)g8; // 0..255
+                        }
+                    }
                 }
             }
-            else if (ch == 3 || ch == 4)
+            finally
             {
-                im8 = im;
-            }
-            else
-            {
-                im8 = new Mat();
-                im.ConvertTo(im8, MatType.CV_8UC3);
-                ch = 3;
+                zBmp.UnlockBits(data);
             }
 
-            var idx1 = (ch == 1) ? im8.GetGenericIndexer<byte>() : null;
-            var idx3 = (ch == 3) ? im8.GetGenericIndexer<Vec3b>() : null;
-            var idx4 = (ch == 4) ? im8.GetGenericIndexer<Vec4b>() : null;
+            return outArr;
+        }
+        public static float[,] LoadZ16(Bitmap zBmp)
+        {
+            if (zBmp == null) throw new ArgumentNullException(nameof(zBmp));
+            if (zBmp.PixelFormat != PixelFormat.Format16bppGrayScale)
+                throw new NotSupportedException("ZMap bitmap must be 16bpp grayscale.");
 
-            int k = 0;
-            for (int y = 0; y < H; y++)
-                for (int x = 0; x < W; x++)
+            int w = zBmp.Width, h = zBmp.Height;
+            var outArr = new float[h, w];
+
+            var rect = new System.Drawing.Rectangle(0, 0, w, h);
+            var data = zBmp.LockBits(rect, ImageLockMode.ReadOnly, zBmp.PixelFormat);
+            try
+            {
+                int strideBytes = data.Stride;
+                int strideElems = strideBytes / 2;
+
+                unsafe
                 {
-                    if (!mask[y, x]) continue;
-
-                    double X = (x - cx) * P.Sx;
-                    double Y = -(y - cy) * P.Sy;
-                    double Z = P.ZOffset + P.ZScale * zRaw[y, x];
-                    pts[k] = new Point3D(X, Y, Z);
-
-                    byte R, G, B;
-                    if (ch == 1)
+                    ushort* basePtr = (ushort*)data.Scan0;
+                    for (int y = 0; y < h; y++)
                     {
-                        byte g = idx1[y, x];
-                        R = g; G = g; B = g;
+                        ushort* row = basePtr + y * strideElems;
+                        for (int x = 0; x < w; x++)
+                            outArr[y, x] = row[x]; // 0..65535
                     }
-                    else if (ch == 3)
-                    {
-                        var bgr = idx3[y, x];
-                        byte g = (byte)Math.Min(255, (int)Math.Round(0.114 * bgr.Item0 + 0.587 * bgr.Item1 + 0.299 * bgr.Item2));
-                        R = g; G = g; B = g;
-                    }
-                    else
-                    {
-                        var bgra = idx4[y, x];
-                        byte g = (byte)Math.Min(255, (int)Math.Round(0.114 * bgra.Item0 + 0.587 * bgra.Item1 + 0.299 * bgra.Item2));
-                        R = g; G = g; B = g;
-                    }
-                    cols[k] = MediaColor.FromRgb(R, G, B);
-                    k++;
                 }
+            }
+            finally { zBmp.UnlockBits(data); }
 
-            Mat roi = BuildRoiAutoOrFromMask(zRaw, H, W, is16, roiMaskPath);
+            return outArr;
+        }
+        public static float[,] LoadZ8(Bitmap zBmp)
+        {
+            if (zBmp == null) throw new ArgumentNullException(nameof(zBmp));
+            if (zBmp.PixelFormat != PixelFormat.Format8bppIndexed)
+                throw new NotSupportedException("ZMap bitmap must be 8bpp indexed (grayscale).");
 
-            Cv2.Erode(roi, roi, Cv2.GetStructuringElement(MorphShapes.Rect, new OpenCvSharp.Size(3, 3)));
+            int w = zBmp.Width, h = zBmp.Height;
+            var outArr = new float[h, w];
 
-            var valid = new Mat(H, W, MatType.CV_8UC1);
-            unsafe
+            var rect = new System.Drawing.Rectangle(0, 0, w, h);
+            var data = zBmp.LockBits(rect, ImageLockMode.ReadOnly, zBmp.PixelFormat);
+            try
             {
-                byte* vp = (byte*)valid.Data;
+                int stride = data.Stride;
+                unsafe
+                {
+                    byte* basePtr = (byte*)data.Scan0;
+                    for (int y = 0; y < h; y++)
+                    {
+                        byte* row = basePtr + y * stride;
+                        for (int x = 0; x < w; x++)
+                            outArr[y, x] = row[x]; // 0..255
+                    }
+                }
+            }
+            finally { zBmp.UnlockBits(data); }
+
+            return outArr;
+        }
+
+        /// Intensity/ZMap에서 포인트클라우드 생성 + 홀검출 + 2D 오버레이 생성
+        // === [ADD] 주력 오버로드: Bitmap 입력, 16-bit 고정 ===
+        public static InspectionResults Inspect(Bitmap intensityBmp, float[,] zRaw, string roiMaskPath = null, bool drawOverlay = true)
+        {
+            if (intensityBmp == null) throw new ArgumentNullException(nameof(intensityBmp));
+            if (zRaw == null) throw new ArgumentNullException(nameof(zRaw));
+
+            // Bitmap -> Mat (표시 비트맵과 동일한 입력을 그대로 사용)
+            Mat imRaw = null;
+            try
+            {
+                // OpenCvSharp의 Bitmap -> Mat 변환 (채널/타입은 아래에서 다시 정규화)
+                imRaw = OpenCvSharp.Extensions.BitmapConverter.ToMat(intensityBmp);
+
+                int H = Math.Min(imRaw.Rows, zRaw.GetLength(0));
+                int W = Math.Min(imRaw.Cols, zRaw.GetLength(1));
+                var im = imRaw[0, H, 0, W];
+
+                // 유효/무효 마스크: 항상 InvalidZ16 기준
+                var mask = new bool[H, W];
+                int validCount = 0;
                 for (int y = 0; y < H; y++)
                     for (int x = 0; x < W; x++)
                     {
                         float v = zRaw[y, x];
-                        bool ok = is16 ? (v != P.InvalidZ16) : (v != P.InvalidZ);
-                        vp[y * valid.Step() + x] = ok ? (byte)255 : (byte)0;
+                        bool ok = (v != P.InvalidZ16);
+                        mask[y, x] = ok;
+                        if (ok) validCount++;
                     }
-            }
+                if (validCount == 0) throw new InvalidOperationException("No valid Z.");
 
-            var hole = new Mat();
-            var notValid = new Mat();
-            Cv2.BitwiseNot(valid, notValid);
-            Cv2.BitwiseAnd(notValid, roi, hole);
+                double cx = P.CenterOrigin ? W / 2.0 : 0.0;
+                double cy = P.CenterOrigin ? H / 2.0 : 0.0;
 
-            var k3 = Cv2.GetStructuringElement(MorphShapes.Rect, new OpenCvSharp.Size(3, 3));
-            Cv2.MorphologyEx(hole, hole, MorphTypes.Open, k3);
-            Cv2.MorphologyEx(hole, hole, MorphTypes.Close, k3);
+                var pts = new Point3D[validCount];
+                var cols = new MediaColor[validCount];
 
-            var labels = new Mat();
-            var stats = new Mat();
-            var cents = new Mat();
-            int n = Cv2.ConnectedComponentsWithStats(hole, labels, stats, cents, PixelConnectivity.Connectivity8, MatType.CV_32S);
-
-            double pxAreaToMm2 = P.Sx * P.Sy;
-            var keepMask = new Mat(H, W, MatType.CV_8UC1, Scalar.All(0));
-
-            var compLabels = new List<int>();
-            var compAreaPx = new List<int>();
-            var compAreaMm2 = new List<double>();
-            var compBBox = new List<OpenCvSharp.Rect>();
-            var compCentroidPx = new List<OpenCvSharp.Point>();
-
-            for (int i = 1; i < n; i++)
-            {
-                int areaPx = stats.Get<int>(i, (int)ConnectedComponentsTypes.Area);
-                double areaMm2 = areaPx * pxAreaToMm2;
-                if (areaMm2 < P.MinAreaMm2) continue;
-
-                int x = stats.Get<int>(i, (int)ConnectedComponentsTypes.Left);
-                int y = stats.Get<int>(i, (int)ConnectedComponentsTypes.Top);
-                int w = stats.Get<int>(i, (int)ConnectedComponentsTypes.Width);
-                int h = stats.Get<int>(i, (int)ConnectedComponentsTypes.Height);
-                var bb = new OpenCvSharp.Rect(x, y, w, h);
-
-                var eq = labels.InRange(i, i);
-                Cv2.BitwiseOr(keepMask, eq, keepMask);
-
-                var cxPx = cents.Get<double>(i, 0);
-                var cyPx = cents.Get<double>(i, 1);
-
-                compLabels.Add(i);
-                compAreaPx.Add(areaPx);
-                compAreaMm2.Add(areaMm2);
-                compBBox.Add(bb);
-                compCentroidPx.Add(new OpenCvSharp.Point((int)Math.Round(cxPx), (int)Math.Round(cyPx)));
-            }
-
-            hole = keepMask;
-
-            var contours = new List<OpenCvSharp.Point[]>();
-            Cv2.FindContours(hole, out var cnts, out _, RetrievalModes.External, ContourApproximationModes.ApproxSimple);
-            contours.AddRange(cnts);
-
-            Bitmap overlayBmp = null;
-            if (drawOverlay)
-            {
-                Mat imColor;
+                // Intensity 8/16/24/32bpp 등 다양한 경우를 8비트 회색기준으로 통일
+                int ch = im.Channels();
+                Mat im8;
+                if (ch == 1)
                 {
-                    Mat base8;
-                    if (im.Type() != MatType.CV_8UC1 && im.Type() != MatType.CV_8UC3 && im.Type() != MatType.CV_8UC4)
+                    if (im.Type() == MatType.CV_8UC1) im8 = im;
+                    else
                     {
-                        double scale = (im.Type() == MatType.CV_16UC1) ? 1.0 / 256.0 : 1.0;
-                        base8 = new Mat();
-                        im.ConvertTo(base8, MatType.CV_8U, scale);
+                        im8 = new Mat();
+                        if (im.Type() == MatType.CV_16UC1) im.ConvertTo(im8, MatType.CV_8U, 1.0 / 256.0);
+                        else im.ConvertTo(im8, MatType.CV_8U);
                     }
-                    else base8 = im;
-
-                    if (base8.Channels() == 1) Cv2.CvtColor(base8, imColor = new Mat(), ColorConversionCodes.GRAY2BGR);
-                    else if (base8.Channels() == 4) Cv2.CvtColor(base8, imColor = new Mat(), ColorConversionCodes.BGRA2BGR);
-                    else imColor = base8.Clone();
                 }
-
-                var fill = new Mat(imColor.Size(), imColor.Type(), new Scalar(0, 0, 255));
-                var blended = new Mat();
-                Cv2.AddWeighted(imColor, 1.0, fill, P.OverlayAlpha, 0, blended);
-                blended.CopyTo(imColor, hole);
-
-                foreach (var c in contours) Cv2.Polylines(imColor, new[] { c }, true, new Scalar(0, 255, 255), 2);
-
-                for (int i = 0; i < compLabels.Count; i++)
+                else if (ch == 3 || ch == 4)
                 {
-                    string txt = compAreaMm2[i].ToString("F1", CultureInfo.InvariantCulture) + " mm^2";
-                    Cv2.PutText(imColor, txt, compCentroidPx[i], HersheyFonts.HersheySimplex, 0.5, new Scalar(0, 0, 0), 2, LineTypes.AntiAlias);
-                    Cv2.PutText(imColor, txt, compCentroidPx[i], HersheyFonts.HersheySimplex, 0.5, new Scalar(0, 255, 255), 1, LineTypes.AntiAlias);
+                    im8 = im;
+                }
+                else
+                {
+                    im8 = new Mat();
+                    im.ConvertTo(im8, MatType.CV_8UC3);
+                    ch = 3;
                 }
 
-                overlayBmp = OpenCvSharp.Extensions.BitmapConverter.ToBitmap(imColor);
-            }
+                var idx1 = (ch == 1) ? im8.GetGenericIndexer<byte>() : null;
+                var idx3 = (ch == 3) ? im8.GetGenericIndexer<Vec3b>() : null;
+                var idx4 = (ch == 4) ? im8.GetGenericIndexer<Vec4b>() : null;
 
-            return new InspectionResults
-            {
-                Points = pts,
-                Colors = cols,
-                Width = W,
-                Height = H,
-                HoleMask = hole,
-                ContoursPx = contours,
-                CompLabels = compLabels,
-                CompAreaPx = compAreaPx,
-                CompAreaMm2 = compAreaMm2,
-                CompBBox = compBBox,
-                CompCentroidPx = compCentroidPx,
-                Overlay2D = overlayBmp
-            };
+                int k = 0;
+                for (int y = 0; y < H; y++)
+                    for (int x = 0; x < W; x++)
+                    {
+                        if (!mask[y, x]) continue;
+
+                        double X = (x - cx) * P.Sx;
+                        double Y = -(y - cy) * P.Sy;
+                        double Z = P.ZOffset + P.ZScale * zRaw[y, x];
+                        pts[k] = new Point3D(X, Y, Z);
+
+                        byte R, G, B;
+                        if (ch == 1)
+                        {
+                            byte g = idx1[y, x];
+                            R = g; G = g; B = g;
+                        }
+                        else if (ch == 3)
+                        {
+                            var bgr = idx3[y, x];
+                            byte g = (byte)Math.Min(255, (int)Math.Round(0.114 * bgr.Item0 + 0.587 * bgr.Item1 + 0.299 * bgr.Item2));
+                            R = g; G = g; B = g;
+                        }
+                        else
+                        {
+                            var bgra = idx4[y, x];
+                            byte g = (byte)Math.Min(255, (int)Math.Round(0.114 * bgra.Item0 + 0.587 * bgra.Item1 + 0.299 * bgra.Item2));
+                            R = g; G = g; B = g;
+                        }
+                        cols[k] = MediaColor.FromRgb(R, G, B);
+                        k++;
+                    }
+
+                // ROI: 항상 InvalidZ16 기준으로 자동/파일 병합
+                Mat roi = BuildRoiAutoOrFromMask(zRaw, H, W, roiMaskPath);
+
+                Cv2.Erode(roi, roi, Cv2.GetStructuringElement(MorphShapes.Rect, new OpenCvSharp.Size(3, 3)));
+
+                var valid = new Mat(H, W, MatType.CV_8UC1);
+                unsafe
+                {
+                    byte* vp = (byte*)valid.Data;
+                    for (int y = 0; y < H; y++)
+                        for (int x = 0; x < W; x++)
+                        {
+                            float v = zRaw[y, x];
+                            bool ok = (v != P.InvalidZ16);
+                            vp[y * valid.Step() + x] = ok ? (byte)255 : (byte)0;
+                        }
+                }
+
+                var hole = new Mat();
+                var notValid = new Mat();
+                Cv2.BitwiseNot(valid, notValid);
+                Cv2.BitwiseAnd(notValid, roi, hole);
+
+                var k3 = Cv2.GetStructuringElement(MorphShapes.Rect, new OpenCvSharp.Size(3, 3));
+                Cv2.MorphologyEx(hole, hole, MorphTypes.Open, k3);
+                Cv2.MorphologyEx(hole, hole, MorphTypes.Close, k3);
+
+                var labels = new Mat();
+                var stats = new Mat();
+                var cents = new Mat();
+                int n = Cv2.ConnectedComponentsWithStats(hole, labels, stats, cents, PixelConnectivity.Connectivity8, MatType.CV_32S);
+
+                double pxAreaToMm2 = P.Sx * P.Sy;
+                var keepMask = new Mat(H, W, MatType.CV_8UC1, Scalar.All(0));
+
+                var compLabels = new List<int>();
+                var compAreaPx = new List<int>();
+                var compAreaMm2 = new List<double>();
+                var compBBox = new List<OpenCvSharp.Rect>();
+                var compCentroidPx = new List<OpenCvSharp.Point>();
+
+                for (int i = 1; i < n; i++)
+                {
+                    int areaPx = stats.Get<int>(i, (int)ConnectedComponentsTypes.Area);
+                    double areaMm2 = areaPx * pxAreaToMm2;
+                    if (areaMm2 < P.MinAreaMm2) continue;
+
+                    int x = stats.Get<int>(i, (int)ConnectedComponentsTypes.Left);
+                    int y = stats.Get<int>(i, (int)ConnectedComponentsTypes.Top);
+                    int w = stats.Get<int>(i, (int)ConnectedComponentsTypes.Width);
+                    int h = stats.Get<int>(i, (int)ConnectedComponentsTypes.Height);
+                    var bb = new OpenCvSharp.Rect(x, y, w, h);
+
+                    var eq = labels.InRange(i, i);
+                    Cv2.BitwiseOr(keepMask, eq, keepMask);
+
+                    var cxPx = cents.Get<double>(i, 0);
+                    var cyPx = cents.Get<double>(i, 1);
+
+                    compLabels.Add(i);
+                    compAreaPx.Add(areaPx);
+                    compAreaMm2.Add(areaMm2);
+                    compBBox.Add(bb);
+                    compCentroidPx.Add(new OpenCvSharp.Point((int)Math.Round(cxPx), (int)Math.Round(cyPx)));
+                }
+
+                hole = keepMask;
+
+                var contours = new List<OpenCvSharp.Point[]>();
+                Cv2.FindContours(hole, out var cnts, out _, RetrievalModes.External, ContourApproximationModes.ApproxSimple);
+                contours.AddRange(cnts);
+
+                Bitmap overlayBmp = null;
+                if (drawOverlay)
+                {
+                    Mat imColor;
+                    {
+                        Mat base8;
+                        if (im.Type() != MatType.CV_8UC1 && im.Type() != MatType.CV_8UC3 && im.Type() != MatType.CV_8UC4)
+                        {
+                            double scale = (im.Type() == MatType.CV_16UC1) ? 1.0 / 256.0 : 1.0;
+                            base8 = new Mat();
+                            im.ConvertTo(base8, MatType.CV_8U, scale);
+                        }
+                        else base8 = im;
+
+                        if (base8.Channels() == 1) Cv2.CvtColor(base8, imColor = new Mat(), ColorConversionCodes.GRAY2BGR);
+                        else if (base8.Channels() == 4) Cv2.CvtColor(base8, imColor = new Mat(), ColorConversionCodes.BGRA2BGR);
+                        else imColor = base8.Clone();
+                    }
+
+                    var fill = new Mat(imColor.Size(), imColor.Type(), new Scalar(0, 0, 255));
+                    var blended = new Mat();
+                    Cv2.AddWeighted(imColor, 1.0, fill, P.OverlayAlpha, 0, blended);
+                    blended.CopyTo(imColor, hole);
+
+                    foreach (var c in contours) Cv2.Polylines(imColor, new[] { c }, true, new Scalar(0, 255, 255), 2);
+
+                    for (int i = 0; i < compLabels.Count; i++)
+                    {
+                        string txt = compAreaMm2[i].ToString("F1", CultureInfo.InvariantCulture) + " mm^2";
+                        Cv2.PutText(imColor, txt, compCentroidPx[i], HersheyFonts.HersheySimplex, 0.5, new Scalar(0, 0, 0), 2, LineTypes.AntiAlias);
+                        Cv2.PutText(imColor, txt, compCentroidPx[i], HersheyFonts.HersheySimplex, 0.5, new Scalar(0, 255, 255), 1, LineTypes.AntiAlias);
+                    }
+
+                    overlayBmp = OpenCvSharp.Extensions.BitmapConverter.ToBitmap(imColor);
+                }
+
+                return new InspectionResults
+                {
+                    Points = pts,
+                    Colors = cols,
+                    Width = W,
+                    Height = H,
+                    HoleMask = hole,
+                    ContoursPx = contours,
+                    CompLabels = compLabels,
+                    CompAreaPx = compAreaPx,
+                    CompAreaMm2 = compAreaMm2,
+                    CompBBox = compBBox,
+                    CompCentroidPx = compCentroidPx,
+                    Overlay2D = overlayBmp
+                };
+            }
+            finally { if (imRaw != null) imRaw.Dispose(); }
         }
+
+
         /// 2D 컨투어를 3D 라인 루프로 변환
-        public static List<Point3D[]> Make3DContourLoops(InspectionResults res, float[,] zRaw, bool is16bit, int neighbor = 2)
+        public static List<Point3D[]> Make3DContourLoops(InspectionResults res, float[,] zRaw, int neighbor = 2)
         {
+            if (res == null || res.ContoursPx == null || res.ContoursPx.Count == 0) return new List<Point3D[]>();
+
             int H = zRaw.GetLength(0), W = zRaw.GetLength(1);
             double cx = P.CenterOrigin ? W / 2.0 : 0.0;
             double cy = P.CenterOrigin ? H / 2.0 : 0.0;
@@ -309,7 +448,7 @@ namespace _3D_VisionSource
                 {
                     int x = ClampInt(c[i].X, 0, W - 1);
                     int y = ClampInt(c[i].Y, 0, H - 1);
-                    double zVal = SampleZWithNeighbor(zRaw, x, y, is16bit ? P.InvalidZ16 : P.InvalidZ, neighbor);
+                    double zVal = SampleZWithNeighbor(zRaw, x, y, P.InvalidZ16, neighbor); // 16-bit 전용
                     double X = (x - cx) * P.Sx;
                     double Y = -(y - cy) * P.Sy;
                     double Z = P.ZOffset + P.ZScale * zVal;
@@ -319,8 +458,11 @@ namespace _3D_VisionSource
             }
             return loops;
         }
+
         // ROI를 파일(있으면) 또는 Z 유효영역의 최대성분으로 생성
-        private static OpenCvSharp.Mat BuildRoiAutoOrFromMask(float[,] zRaw, int H, int W, bool is16bit, string roiMaskPath)
+        // === [REPLACE] is16 제거 버전 ===
+        // ROI를 파일(있으면) 또는 Z 유효영역의 최대성분으로 생성
+        private static OpenCvSharp.Mat BuildRoiAutoOrFromMask(float[,] zRaw, int H, int W, string roiMaskPath)
         {
             if (!string.IsNullOrEmpty(roiMaskPath) && File.Exists(roiMaskPath))
             {
@@ -337,14 +479,12 @@ namespace _3D_VisionSource
             {
                 byte* vp = (byte*)valid.Data;
                 for (int y = 0; y < H; y++)
-                {
                     for (int x = 0; x < W; x++)
                     {
                         float v = zRaw[y, x];
-                        bool ok = is16bit ? (v != (float)P.InvalidZ16) : (v != (float)P.InvalidZ);
+                        bool ok = (v != P.InvalidZ16); // 16-bit 전용
                         vp[y * valid.Step() + x] = ok ? (byte)255 : (byte)0;
                     }
-                }
             }
 
             var k5 = Cv2.GetStructuringElement(MorphShapes.Rect, new OpenCvSharp.Size(5, 5));
@@ -365,10 +505,12 @@ namespace _3D_VisionSource
             }
             return roiAuto;
         }
+
         /// 결손 영역을 3D 채움 메쉬로 생성
-        public static HT.MeshGeometry3D[] Make3DFilledMeshes(InspectionResults res, float[,] zRaw, bool is16bit, int neighbor = 2, double approxEpsPx = 1.5)
+        // === [REPLACE] 3D 채움 메쉬: is16 제거 ===
+        public static HT.MeshGeometry3D[] Make3DFilledMeshes(InspectionResults res, float[,] zRaw, int neighbor = 2, double approxEpsPx = 1.5)
         {
-            if (res == null || res.ContoursPx == null || res.ContoursPx.Count == 0) return new HT.MeshGeometry3D[0];
+            if (res == null || res.ContoursPx == null || res.ContoursPx.Count == 0) return Array.Empty<HT.MeshGeometry3D>();
 
             int H = zRaw.GetLength(0), W = zRaw.GetLength(1);
             double cx = P.CenterOrigin ? W / 2.0 : 0.0;
@@ -392,9 +534,9 @@ namespace _3D_VisionSource
                 for (int t = 0; t < tris.Count; t++)
                 {
                     int[] tri = tris[t];
-                    int i0 = MapIndex(c, tri[0], map, positions, W, H, cx, cy, zRaw, is16bit, neighbor);
-                    int i1 = MapIndex(c, tri[1], map, positions, W, H, cx, cy, zRaw, is16bit, neighbor);
-                    int i2 = MapIndex(c, tri[2], map, positions, W, H, cx, cy, zRaw, is16bit, neighbor);
+                    int i0 = MapIndex(c, tri[0], map, positions, W, H, cx, cy, zRaw, neighbor);
+                    int i1 = MapIndex(c, tri[1], map, positions, W, H, cx, cy, zRaw, neighbor);
+                    int i2 = MapIndex(c, tri[2], map, positions, W, H, cx, cy, zRaw, neighbor);
                     indices.Add(i0); indices.Add(i1); indices.Add(i2);
                 }
 
@@ -403,6 +545,26 @@ namespace _3D_VisionSource
 
             return list.ToArray();
         }
+
+        static int MapIndex(OpenCvSharp.Point[] c, int i, Dictionary<int, int> map, HT.Vector3Collection pos,
+                            int W, int H, double cx, double cy, float[,] zRaw, int neighbor)
+        {
+            if (map.TryGetValue(i, out int outIdx)) return outIdx;
+
+            int x = Math.Max(0, Math.Min(W - 1, c[i].X));
+            int y = Math.Max(0, Math.Min(H - 1, c[i].Y));
+
+            double zVal = SampleZWithNeighbor(zRaw, x, y, P.InvalidZ16, neighbor); // 16-bit 전용
+            double X = (x - cx) * P.Sx;
+            double Y = -(y - cy) * P.Sy;
+            double Z = P.ZOffset + P.ZScale * zVal;
+
+            outIdx = pos.Count;
+            pos.Add(new Vector3((float)X, (float)Y, (float)Z));
+            map[i] = outIdx;
+            return outIdx;
+        }
+
         /// 다각형을 귀자르기 삼각분할
         static List<int[]> TriangulateSimplePolygon(OpenCvSharp.Point[] poly)
         {
