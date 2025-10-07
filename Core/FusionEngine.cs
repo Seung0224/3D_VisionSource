@@ -1,11 +1,11 @@
 ﻿using System;
+using SharpDX;
 using System.IO;
 using System.Linq;
+using OpenCvSharp;
 using System.Drawing;
 using System.Collections.Generic;
 using System.Globalization;
-using SharpDX;
-using OpenCvSharp;
 using System.Windows.Media.Media3D;
 using HT = HelixToolkit.Wpf.SharpDX;
 using MediaColor = System.Windows.Media.Color;
@@ -47,7 +47,6 @@ namespace _3D_VisionSource
     public static class FusionEngine
     {
         static readonly InspectionParams P = new InspectionParams();
-
         /// Z맵을 float[,]로 로드(CV_8UC1/CV_16UC1 지원)
         public static float[,] LoadZRawFromFile(string zPath, out bool is16bit)
         {
@@ -81,7 +80,6 @@ namespace _3D_VisionSource
                 throw new NotSupportedException("ZMap must be CV_8UC1 or CV_16UC1.");
             }
         }
-
         /// Intensity/ZMap에서 포인트클라우드 생성 + 홀검출 + 2D 오버레이 생성
         public static InspectionResults Inspect(string intensityPath, string zPath, string roiMaskPath = null, bool drawOverlay = true)
         {
@@ -296,7 +294,6 @@ namespace _3D_VisionSource
                 Overlay2D = overlayBmp
             };
         }
-
         /// 2D 컨투어를 3D 라인 루프로 변환
         public static List<Point3D[]> Make3DContourLoops(InspectionResults res, float[,] zRaw, bool is16bit, int neighbor = 2)
         {
@@ -322,7 +319,6 @@ namespace _3D_VisionSource
             }
             return loops;
         }
-
         // ROI를 파일(있으면) 또는 Z 유효영역의 최대성분으로 생성
         private static OpenCvSharp.Mat BuildRoiAutoOrFromMask(float[,] zRaw, int H, int W, bool is16bit, string roiMaskPath)
         {
@@ -407,7 +403,6 @@ namespace _3D_VisionSource
 
             return list.ToArray();
         }
-
         /// 다각형을 귀자르기 삼각분할
         static List<int[]> TriangulateSimplePolygon(OpenCvSharp.Point[] poly)
         {
@@ -448,7 +443,6 @@ namespace _3D_VisionSource
             }
             return tris;
         }
-
         /// 삼각형 꼭짓점 인덱스를 위치/인덱스로 매핑
         static int MapIndex(OpenCvSharp.Point[] c, int i, Dictionary<int, int> map, HT.Vector3Collection pos, int W, int H, double cx, double cy, float[,] zRaw, bool is16, int neighbor)
         {
@@ -468,7 +462,6 @@ namespace _3D_VisionSource
             map[i] = outIdx;
             return outIdx;
         }
-
         /// 다각형 부호 있는 면적
         static double SignedArea(OpenCvSharp.Point[] poly)
         {
@@ -481,14 +474,12 @@ namespace _3D_VisionSource
             }
             return s * 0.5;
         }
-
         /// CCW 볼록성 판정
         static bool IsConvex(OpenCvSharp.Point a, OpenCvSharp.Point b, OpenCvSharp.Point c)
         {
             long cross = (long)(b.X - a.X) * (c.Y - a.Y) - (long)(b.Y - a.Y) * (c.X - a.X);
             return cross > 0;
         }
-
         /// 점의 삼각형 포함 판정
         static bool PointInTriangle(OpenCvSharp.Point p, OpenCvSharp.Point a, OpenCvSharp.Point b, OpenCvSharp.Point c)
         {
@@ -505,7 +496,6 @@ namespace _3D_VisionSource
             double v = (dot00 * dot12 - dot01 * dot02) * inv;
             return (u >= 0) && (v >= 0) && (u + v <= 1);
         }
-
         /// 근방 평균으로 Z 샘플링(폴백 링 확장)
         static double SampleZWithNeighbor(float[,] zRaw, int x, int y, float invalidZ, int neighbor)
         {
@@ -538,7 +528,6 @@ namespace _3D_VisionSource
             }
             return invalidZ;
         }
-
         /// 정수 클램프
         static int ClampInt(int v, int lo, int hi)
         {

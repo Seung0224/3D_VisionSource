@@ -1,8 +1,8 @@
 ﻿using System;
 using SharpDX;
 using System.Linq;
-using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Controls;
 using HelixToolkit.Wpf.SharpDX;
 using Media3D = System.Windows.Media.Media3D;
 using DxCamera = HelixToolkit.Wpf.SharpDX.PerspectiveCamera;
@@ -59,7 +59,6 @@ namespace _3D_VisionSource.Viewer
             cam.NearPlaneDistance = Math.Max(0.001, r * 0.01);
             cam.FarPlaneDistance = Math.Max(10.0, r * 20.0);
         }
-
         public void LoadPoints(System.Windows.Media.Media3D.Point3D[] pts, System.Windows.Media.Color[] cols, double pointSize = 2.0)
         {
             if (pts == null || cols == null || pts.Length == 0 || cols.Length != pts.Length)
@@ -120,7 +119,6 @@ namespace _3D_VisionSource.Viewer
             FitCameraToPoints(pts);
             Viewport.ZoomExtents();
         }
-
         public void OverlayLineLoops(System.Windows.Media.Media3D.Point3D[][] loops, System.Windows.Media.Color color, float thickness = 10f)
         {
             if (loops == null || loops.Length == 0) return;
@@ -161,9 +159,7 @@ namespace _3D_VisionSource.Viewer
 
             Viewport.Items.Add(m);
         }
-        public void OverlayFillMeshes(HelixToolkit.Wpf.SharpDX.MeshGeometry3D[] meshes,
-                              System.Windows.Media.Color color,
-                              float opacity = 0.6f)   // 조금 진하게 시작
+        public void OverlayFillMeshes(HelixToolkit.Wpf.SharpDX.MeshGeometry3D[] meshes, System.Windows.Media.Color color, float opacity = 0.6f)
         {
             if (meshes == null || meshes.Length == 0) return;
 
@@ -209,6 +205,5 @@ namespace _3D_VisionSource.Viewer
                 Viewport.Items.Add(m);
             }
         }
-
     }
 }
