@@ -13,6 +13,7 @@ using MediaColor = System.Windows.Media.Color;
 
 namespace _3D_VisionSource
 {
+    // 이 Parameter를 비롯한 Calibration 값들을 정확히 넣어야 정확한 값 산출 가능
     public class InspectionParams
     {
         public float Sx = 0.05f;
@@ -22,7 +23,7 @@ namespace _3D_VisionSource
         public byte InvalidZ = 0;
         public ushort InvalidZ16 = 0;
         public bool CenterOrigin = true;
-        public double MinAreaMm2 = 3.0;
+        public double MinAreaMm2 = 0.001;
         public double OverlayAlpha = 0.35;
     }
 
@@ -355,8 +356,6 @@ namespace _3D_VisionSource
             return loops;
         }
 
-        // ROI를 파일(있으면) 또는 Z 유효영역의 최대성분으로 생성
-        // === [REPLACE] is16 제거 버전 ===
         // ROI를 파일(있으면) 또는 Z 유효영역의 최대성분으로 생성
         private static OpenCvSharp.Mat BuildRoiAutoOrFromMask(float[,] zRaw, int H, int W, string roiMaskPath)
         {

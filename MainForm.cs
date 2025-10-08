@@ -8,6 +8,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
@@ -26,6 +27,8 @@ namespace _3D_VisionSource
         // ImageBox 공용 컨텍스트 메뉴
         private readonly UIContextMenuStrip _imageMenu = new UIContextMenuStrip();
         private ToolStripMenuItem _miFit = new ToolStripMenuItem(), _miSave = new ToolStripMenuItem();
+
+        private RoiOverlayForImageBox _roi;
         #endregion
 
         /// 폼 및 UI 초기화(생성자)
@@ -35,6 +38,7 @@ namespace _3D_VisionSource
             InitializeMainUI();
             Initialize3DViewerUI();
             InitializeImageBoxContextMenu();
+            InitializeROI();
         }
 
         #region Initialize
@@ -80,6 +84,11 @@ namespace _3D_VisionSource
             IntensityImageBox.ContextMenuStrip = _imageMenu;
             ZMapImageBox.ContextMenuStrip = _imageMenu;
             TWODImageBox.ContextMenuStrip = _imageMenu;
+        }
+
+        private void InitializeROI()
+        {
+            _roi = new RoiOverlayForImageBox(IntensityImageBox);
         }
         #endregion
 
@@ -162,6 +171,7 @@ namespace _3D_VisionSource
         {
             _intensityPath = null;
             _zMapPath = null;
+
             DisposeResources();
         }
         /// 종료 후 정리(디버그 보조)
@@ -265,6 +275,17 @@ namespace _3D_VisionSource
             SetImage(IntensityImageBox, ref _intensityImg, _intensityPath);
             SetImage(ZMapImageBox, ref _zmapImg, _zMapPath);
         }
+
+        private void BTN_SET_ROI_Click(object sender, EventArgs e)
+        {
+        }
+
+        private void BTN_SHOW_ROI_Click(object sender, EventArgs e)
+        {
+            _roi.BtnShowRoi();
+
+        }
+
         /// ImageBox에 파일 경로를 로드/표시(잠금 없이)
         private static void SetImage(ImageBox box, ref Image old, string path)
         {

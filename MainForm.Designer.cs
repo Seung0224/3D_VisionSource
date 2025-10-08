@@ -48,6 +48,8 @@
             this.BTN_IMAGE_OPEN = new Sunny.UI.UISymbolButton();
             this.IntensityPanelUI = new Sunny.UI.UIPanel();
             this.IntensityImageBox = new Cyotek.Windows.Forms.ImageBox();
+            this.BTN_SET_ROI = new Sunny.UI.UISymbolButton();
+            this.BTN_SHOW_ROI = new Sunny.UI.UISymbolButton();
             this.MainUITLP.SuspendLayout();
             this.ButtonUITLP.SuspendLayout();
             this.uiTableLayoutPanel1.SuspendLayout();
@@ -106,10 +108,11 @@
             this.THREEDPanelUI.Dock = System.Windows.Forms.DockStyle.Fill;
             this.THREEDPanelUI.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(249)))), ((int)(((byte)(255)))));
             this.THREEDPanelUI.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.THREEDPanelUI.Location = new System.Drawing.Point(810, 3);
+            this.THREEDPanelUI.Location = new System.Drawing.Point(811, 5);
+            this.THREEDPanelUI.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.THREEDPanelUI.MinimumSize = new System.Drawing.Size(1, 1);
             this.THREEDPanelUI.Name = "THREEDPanelUI";
-            this.THREEDPanelUI.Size = new System.Drawing.Size(263, 34);
+            this.THREEDPanelUI.Size = new System.Drawing.Size(261, 30);
             this.THREEDPanelUI.TabIndex = 11;
             this.THREEDPanelUI.Text = "3D";
             this.THREEDPanelUI.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
@@ -119,10 +122,11 @@
             this.TWODPanelUI.Dock = System.Windows.Forms.DockStyle.Fill;
             this.TWODPanelUI.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(249)))), ((int)(((byte)(255)))));
             this.TWODPanelUI.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.TWODPanelUI.Location = new System.Drawing.Point(541, 3);
+            this.TWODPanelUI.Location = new System.Drawing.Point(542, 5);
+            this.TWODPanelUI.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.TWODPanelUI.MinimumSize = new System.Drawing.Size(1, 1);
             this.TWODPanelUI.Name = "TWODPanelUI";
-            this.TWODPanelUI.Size = new System.Drawing.Size(263, 34);
+            this.TWODPanelUI.Size = new System.Drawing.Size(261, 30);
             this.TWODPanelUI.TabIndex = 10;
             this.TWODPanelUI.Text = "2D";
             this.TWODPanelUI.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
@@ -132,10 +136,11 @@
             this.ZMapPanelUI.Dock = System.Windows.Forms.DockStyle.Fill;
             this.ZMapPanelUI.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(249)))), ((int)(((byte)(255)))));
             this.ZMapPanelUI.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.ZMapPanelUI.Location = new System.Drawing.Point(272, 3);
+            this.ZMapPanelUI.Location = new System.Drawing.Point(273, 5);
+            this.ZMapPanelUI.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.ZMapPanelUI.MinimumSize = new System.Drawing.Size(1, 1);
             this.ZMapPanelUI.Name = "ZMapPanelUI";
-            this.ZMapPanelUI.Size = new System.Drawing.Size(263, 34);
+            this.ZMapPanelUI.Size = new System.Drawing.Size(261, 30);
             this.ZMapPanelUI.TabIndex = 9;
             this.ZMapPanelUI.Text = "Z-Map";
             this.ZMapPanelUI.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
@@ -145,9 +150,11 @@
             this.ButtonUITLP.AutoSize = true;
             this.ButtonUITLP.ColumnCount = 1;
             this.ButtonUITLP.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.ButtonUITLP.Controls.Add(this.BTN_SHOW_ROI, 0, 2);
+            this.ButtonUITLP.Controls.Add(this.BTN_SET_ROI, 0, 3);
             this.ButtonUITLP.Controls.Add(this.uiTableLayoutPanel1, 0, 1);
             this.ButtonUITLP.Controls.Add(this.TLP_INTENSITY, 0, 0);
-            this.ButtonUITLP.Controls.Add(this.BTN_IMAGE_FUSION, 0, 2);
+            this.ButtonUITLP.Controls.Add(this.BTN_IMAGE_FUSION, 0, 4);
             this.ButtonUITLP.Location = new System.Drawing.Point(1076, 40);
             this.ButtonUITLP.Margin = new System.Windows.Forms.Padding(0, 0, 2, 0);
             this.ButtonUITLP.Name = "ButtonUITLP";
@@ -256,14 +263,14 @@
             this.BTN_IMAGE_FUSION.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(210)))), ((int)(((byte)(235)))), ((int)(((byte)(255)))));
             this.BTN_IMAGE_FUSION.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.BTN_IMAGE_FUSION.ForeColor = System.Drawing.Color.Black;
-            this.BTN_IMAGE_FUSION.Location = new System.Drawing.Point(3, 83);
+            this.BTN_IMAGE_FUSION.Location = new System.Drawing.Point(3, 163);
             this.BTN_IMAGE_FUSION.MinimumSize = new System.Drawing.Size(1, 1);
             this.BTN_IMAGE_FUSION.Name = "BTN_IMAGE_FUSION";
             this.BTN_IMAGE_FUSION.Size = new System.Drawing.Size(338, 34);
             this.BTN_IMAGE_FUSION.Symbol = 559469;
             this.BTN_IMAGE_FUSION.SymbolColor = System.Drawing.Color.Black;
             this.BTN_IMAGE_FUSION.TabIndex = 5;
-            this.BTN_IMAGE_FUSION.Text = "3D Fusion";
+            this.BTN_IMAGE_FUSION.Text = "Fusion Run";
             this.BTN_IMAGE_FUSION.TipsFont = new System.Drawing.Font("굴림", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.BTN_IMAGE_FUSION.Click += new System.EventHandler(this.BTN_IMAGE_FUSION_Click);
             // 
@@ -317,10 +324,11 @@
             this.IntensityPanelUI.Dock = System.Windows.Forms.DockStyle.Fill;
             this.IntensityPanelUI.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(249)))), ((int)(((byte)(255)))));
             this.IntensityPanelUI.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.IntensityPanelUI.Location = new System.Drawing.Point(3, 3);
+            this.IntensityPanelUI.Location = new System.Drawing.Point(4, 5);
+            this.IntensityPanelUI.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.IntensityPanelUI.MinimumSize = new System.Drawing.Size(1, 1);
             this.IntensityPanelUI.Name = "IntensityPanelUI";
-            this.IntensityPanelUI.Size = new System.Drawing.Size(263, 34);
+            this.IntensityPanelUI.Size = new System.Drawing.Size(261, 30);
             this.IntensityPanelUI.TabIndex = 8;
             this.IntensityPanelUI.Text = "Intensity";
             this.IntensityPanelUI.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
@@ -333,6 +341,42 @@
             this.IntensityImageBox.Name = "IntensityImageBox";
             this.IntensityImageBox.Size = new System.Drawing.Size(263, 774);
             this.IntensityImageBox.TabIndex = 12;
+            // 
+            // BTN_SET_ROI
+            // 
+            this.BTN_SET_ROI.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.BTN_SET_ROI.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.BTN_SET_ROI.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(210)))), ((int)(((byte)(235)))), ((int)(((byte)(255)))));
+            this.BTN_SET_ROI.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.BTN_SET_ROI.ForeColor = System.Drawing.Color.Black;
+            this.BTN_SET_ROI.Location = new System.Drawing.Point(3, 123);
+            this.BTN_SET_ROI.MinimumSize = new System.Drawing.Size(1, 1);
+            this.BTN_SET_ROI.Name = "BTN_SET_ROI";
+            this.BTN_SET_ROI.Size = new System.Drawing.Size(338, 34);
+            this.BTN_SET_ROI.Symbol = 559483;
+            this.BTN_SET_ROI.SymbolColor = System.Drawing.Color.Black;
+            this.BTN_SET_ROI.TabIndex = 13;
+            this.BTN_SET_ROI.Text = "Set ROI";
+            this.BTN_SET_ROI.TipsFont = new System.Drawing.Font("굴림", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.BTN_SET_ROI.Click += new System.EventHandler(this.BTN_SET_ROI_Click);
+            // 
+            // BTN_SHOW_ROI
+            // 
+            this.BTN_SHOW_ROI.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.BTN_SHOW_ROI.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.BTN_SHOW_ROI.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(210)))), ((int)(((byte)(235)))), ((int)(((byte)(255)))));
+            this.BTN_SHOW_ROI.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.BTN_SHOW_ROI.ForeColor = System.Drawing.Color.Black;
+            this.BTN_SHOW_ROI.Location = new System.Drawing.Point(3, 83);
+            this.BTN_SHOW_ROI.MinimumSize = new System.Drawing.Size(1, 1);
+            this.BTN_SHOW_ROI.Name = "BTN_SHOW_ROI";
+            this.BTN_SHOW_ROI.Size = new System.Drawing.Size(338, 34);
+            this.BTN_SHOW_ROI.Symbol = 559445;
+            this.BTN_SHOW_ROI.SymbolColor = System.Drawing.Color.Black;
+            this.BTN_SHOW_ROI.TabIndex = 14;
+            this.BTN_SHOW_ROI.Text = "Show ROI";
+            this.BTN_SHOW_ROI.TipsFont = new System.Drawing.Font("굴림", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.BTN_SHOW_ROI.Click += new System.EventHandler(this.BTN_SHOW_ROI_Click);
             // 
             // MainForm
             // 
@@ -377,6 +421,8 @@
         private Cyotek.Windows.Forms.ImageBox TWODImageBox;
         private Cyotek.Windows.Forms.ImageBox ZMapImageBox;
         private Cyotek.Windows.Forms.ImageBox IntensityImageBox;
+        private Sunny.UI.UISymbolButton BTN_SET_ROI;
+        private Sunny.UI.UISymbolButton BTN_SHOW_ROI;
     }
 }
 
