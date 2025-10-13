@@ -129,7 +129,7 @@ namespace _3D_VisionSource
             return outArr;
         }
 
-        public static InspectionResults Inspect(Mat intensityMat, float[,] zRaw, string roiMaskPath = null, bool drawOverlay = true)
+        public static InspectionResults Inspect(Mat intensityMat, float[,] zRaw, System.Drawing.RectangleF? roiRectImg = null, bool drawOverlay = true)
         {
             // [LOG] 타이머 & 랩 유틸
             var sw = Stopwatch.StartNew();
@@ -193,8 +193,17 @@ namespace _3D_VisionSource
                 lap("pointcloud+color");
 
                 // ROI: 파일 or 자동
-                Mat roi = BuildRoiAutoOrFromMask(zRaw, H, W, roiMaskPath);
-                lap("roi-build");
+                Mat roi;
+                if (roiRectImg.HasValue)
+                {
+                    roi = BuildRoiFromRect(roiRectImg.Value, H, W);  // ⬅ 사각형 마스크
+                    lap("ROI Mode On");
+                }
+                else
+                {
+                    roi = BuildRoiAuto(zRaw, H, W);
+                    lap("A-ROI Mode On");
+                }
 
                 // ROI 경계 잡음 제거(침식)
                 Cv2.Erode(roi, roi, Cv2.GetStructuringElement(MorphShapes.Rect, new OpenCvSharp.Size(3, 3)));
@@ -353,28 +362,7 @@ namespace _3D_VisionSource
                 throw;
             }
         }
-        static void DrawLabel(Mat img, string text, OpenCvSharp.Point org, double scale = 0.5, int thickness = 1)
-        {
-            int baseline;
-            var size = Cv2.GetTextSize(text, HersheyFonts.HersheySimplex, scale, thickness, out baseline);
-            var pad = 3;
-            var rect = new OpenCvSharp.Rect(
-                Math.Max(0, org.X),
-                Math.Max(0, org.Y - size.Height - baseline),
-                Math.Min(size.Width + pad * 2, Math.Max(0, img.Cols - org.X)),
-                Math.Min(size.Height + baseline + pad * 2, Math.Max(0, img.Rows - (org.Y - size.Height - baseline)))
-            );
-
-            if (rect.Width > 0 && rect.Height > 0)
-                Cv2.Rectangle(img, rect, new Scalar(0, 0, 0, 0), -1, LineTypes.AntiAlias); // 검정 배경
-
-            // 두 번 그려 외곽선 효과 (검정 → 노랑)
-            Cv2.PutText(img, text, new OpenCvSharp.Point(org.X + pad, org.Y - baseline + pad),
-                HersheyFonts.HersheySimplex, scale, new Scalar(0, 0, 0), thickness + 2, LineTypes.AntiAlias);
-            Cv2.PutText(img, text, new OpenCvSharp.Point(org.X + pad, org.Y - baseline + pad),
-                HersheyFonts.HersheySimplex, scale, new Scalar(0, 255, 255), thickness, LineTypes.AntiAlias);
-        }
-
+      
         static void DrawLabelThin(Mat img, string text, OpenCvSharp.Point org, double scale = 0.4, int thickness = 1)
         {
             // 외곽선
@@ -385,7 +373,6 @@ namespace _3D_VisionSource
                 HersheyFonts.HersheySimplex, scale, new Scalar(0, 255, 255), thickness, LineTypes.AntiAlias);
         }
 
-        // (선택) 면적 표기 포맷
         static string FormatArea(double a)
         {
             var inv = System.Globalization.CultureInfo.InvariantCulture;
@@ -435,51 +422,64 @@ namespace _3D_VisionSource
                 throw;
             }
         }
-
-        // ROI를 파일(있으면) 또는 Z 유효영역의 최대성분으로 생성
-        private static OpenCvSharp.Mat BuildRoiAutoOrFromMask(float[,] zRaw, int H, int W, string roiMaskPath)
+        // 새 헬퍼 추가: 이미지 좌표 사각형 → 8U 마스크
+        static OpenCvSharp.Mat BuildRoiFromRect(System.Drawing.RectangleF rImg, int H, int W)
         {
-            if (!string.IsNullOrEmpty(roiMaskPath) && File.Exists(roiMaskPath))
-            {
-                var roi = Cv2.ImRead(roiMaskPath, ImreadModes.Grayscale);
-                if (roi.Empty()) throw new InvalidOperationException("ROI read failed: " + roiMaskPath);
-                if (roi.Rows != H || roi.Cols != W)
-                    Cv2.Resize(roi, roi, new OpenCvSharp.Size(W, H), 0, 0, InterpolationFlags.Nearest);
-                Cv2.Threshold(roi, roi, 127, 255, ThresholdTypes.Binary);
-                return roi;
-            }
+            var roi = new Mat(H, W, MatType.CV_8UC1, Scalar.All(0));
 
-            var valid = new Mat(H, W, MatType.CV_8UC1);
+            // 클램프 & 정수화
+            int x = Math.Max(0, Math.Min(W - 1, (int)Math.Floor(rImg.X)));
+            int y = Math.Max(0, Math.Min(H - 1, (int)Math.Floor(rImg.Y)));
+            int rw = Math.Max(0, Math.Min(W - x, (int)Math.Ceiling(rImg.Width)));
+            int rh = Math.Max(0, Math.Min(H - y, (int)Math.Ceiling(rImg.Height)));
+
+            if (rw > 0 && rh > 0)
+                Cv2.Rectangle(roi, new OpenCvSharp.Rect(x, y, rw, rh), Scalar.All(255), -1, LineTypes.Link8);
+
+            return roi;
+        }
+
+
+        // Z 유효영역의 최대성분으로 생성
+        private static OpenCvSharp.Mat BuildRoiAuto(float[,] zRaw, int H, int W)
+        {
+            var valid = new OpenCvSharp.Mat(H, W, OpenCvSharp.MatType.CV_8UC1);
             unsafe
             {
                 byte* vp = (byte*)valid.Data;
+                int step = (int)valid.Step();
                 for (int y = 0; y < H; y++)
+                {
+                    int row = y * step;
                     for (int x = 0; x < W; x++)
                     {
                         float v = zRaw[y, x];
-                        bool ok = (v != P.InvalidZ16); // 16-bit 전용
-                        vp[y * valid.Step() + x] = ok ? (byte)255 : (byte)0;
+                        bool ok = (v != P.InvalidZ16); // 16-bit 원천 가정(무효값과 비교)
+                        vp[row + x] = ok ? (byte)255 : (byte)0;
                     }
+                }
             }
 
-            var k5 = Cv2.GetStructuringElement(MorphShapes.Rect, new OpenCvSharp.Size(5, 5));
-            Cv2.MorphologyEx(valid, valid, MorphTypes.Close, k5);
-            Cv2.MorphologyEx(valid, valid, MorphTypes.Open, k5);
+            var k5 = OpenCvSharp.Cv2.GetStructuringElement(OpenCvSharp.MorphShapes.Rect, new OpenCvSharp.Size(5, 5));
+            OpenCvSharp.Cv2.MorphologyEx(valid, valid, OpenCvSharp.MorphTypes.Close, k5);
+            OpenCvSharp.Cv2.MorphologyEx(valid, valid, OpenCvSharp.MorphTypes.Open, k5);
 
-            Cv2.FindContours(valid, out var cnts, out _, RetrievalModes.External, ContourApproximationModes.ApproxSimple);
-            var roiAuto = new Mat(H, W, MatType.CV_8UC1, Scalar.All(0));
+            OpenCvSharp.Cv2.FindContours(valid, out var cnts, out _, OpenCvSharp.RetrievalModes.External, OpenCvSharp.ContourApproximationModes.ApproxSimple);
+
+            var roiAuto = new OpenCvSharp.Mat(H, W, OpenCvSharp.MatType.CV_8UC1, OpenCvSharp.Scalar.All(0));
             if (cnts != null && cnts.Length > 0)
             {
                 int best = 0; double bestA = 0;
                 for (int i = 0; i < cnts.Length; i++)
                 {
-                    double a = Cv2.ContourArea(cnts[i]);
+                    double a = OpenCvSharp.Cv2.ContourArea(cnts[i]);
                     if (a > bestA) { bestA = a; best = i; }
                 }
-                Cv2.DrawContours(roiAuto, new[] { cnts[best] }, -1, Scalar.All(255), -1);
+                OpenCvSharp.Cv2.DrawContours(roiAuto, new[] { cnts[best] }, -1, OpenCvSharp.Scalar.All(255), -1);
             }
             return roiAuto;
         }
+
 
         /// 결손 영역을 3D 채움 메쉬로 생성
         public static HT.MeshGeometry3D[] Make3DFilledMeshes(InspectionResults res, float[,] zRaw, int neighbor = 2, double approxEpsPx = 1.5)

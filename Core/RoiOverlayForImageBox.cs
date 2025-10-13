@@ -2,35 +2,20 @@
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
-using Cyotek.Windows.Forms; // NuGet: Cyotek.Windows.Forms.ImageBox
+using Cyotek.Windows.Forms;
 
 namespace _3D_VisionSource
 {
-    // C# 7.3 / WinForms / Cyotek ImageBox 전용 ROI 오버레이 매니저 (단일 파일)
-    // 사용법:
-    //   1) 이 파일을 프로젝트에 추가
-    //   2) Form 생성자 등에서: _roi = new RoiOverlayForImageBox(IntensityImageBox);
-    //   3) btn_show_roi 클릭 핸들러에서: _roi.BtnShowRoi();
-    //   4) ROI 가져오기(이미지 좌표): RectangleF? r = _roi.GetRoiImageRect();
-    //   5) ROI 설정(이미지 좌표): _roi.SetRoiImageRect(new RectangleF(x,y,w,h));
-    //
-    // 주의: Cyotek ImageBox의 Zoom/스크롤/팬을 사용해도 ROI는 이미지 좌표 기준으로 정확히 유지됩니다.
-
-    // C# 7.3 / WinForms / Cyotek ImageBox 전용 ROI 오버레이 매니저
-    // - 줌/스크롤에도 ROI 흔들림 없음 (ImageBox ViewPort + AutoScrollPosition + ZoomFactor 기반 변환)
-    // - ROI 드래그 중에는 ImageBox의 왼쪽버튼 팬을 일시 억제(PanMode Middle) 후 MouseUp에 복원
-    using System;
-    using System.Drawing;
-    using System.Drawing.Drawing2D;
-    using System.Windows.Forms;
-    using Cyotek.Windows.Forms;
-
     public sealed class RoiOverlayForImageBox : IDisposable
     {
         private readonly ImageBox _box;
 
         // ROI (이미지 좌표)
         private RectangleF? _roiImg;
+
+        // 잠금 상태(확정)
+        private bool _locked = false;
+        public bool IsLocked => _locked;
 
         // 마우스 편집 상태
         private bool _draggingBody;
@@ -43,8 +28,8 @@ namespace _3D_VisionSource
         private ImageBoxPanMode _savedPanMode = ImageBoxPanMode.Both;
         private bool _panSuppressed;
 
-        // 스타일
-        public Color Stroke { get; set; } = Color.DeepSkyBlue;
+        public Color StrokeUnlocked { get; set; } = Color.Yellow;
+        public Color StrokeLocked { get; set; } = Color.LimeGreen;
         public Color Fill { get; set; } = Color.FromArgb(64, Color.DeepSkyBlue);
         public float StrokeWidth { get; set; } = 2f;
 
@@ -91,6 +76,7 @@ namespace _3D_VisionSource
             var x = ((float)_box.Image.Width - w) * 0.5f;
             var y = ((float)_box.Image.Height - h) * 0.5f;
             _roiImg = Normalize(new RectangleF(x, y, w, h));
+            _locked = false; // 새로 만들 땐 편집 가능
             _box.Invalidate();
         }
 
@@ -100,13 +86,39 @@ namespace _3D_VisionSource
         {
             if (_box.Image == null) return;
             _roiImg = Normalize(rectImg);
+            _locked = false; // 외부에서 세팅하면 기본은 편집 가능 상태
             _box.Invalidate();
         }
 
         public void ClearRoi()
         {
             _roiImg = null;
+            _locked = false;
             _box.Invalidate();
+        }
+
+        /// <summary>ROI 확정(잠금). 점선으로 보이고 이동/리사이즈가 불가.</summary>
+        public void ConfirmRoi()
+        {
+            if (_roiImg.HasValue)
+            {
+                _locked = true;
+                _draggingBody = _draggingHandle = false;
+                _activeHandle = -1;
+                RestorePan();
+                _box.Cursor = Cursors.Default;
+                _box.Invalidate();
+            }
+        }
+
+        /// <summary>ROI 잠금 해제(옵션).</summary>
+        public void UnlockRoi()
+        {
+            if (_roiImg.HasValue)
+            {
+                _locked = false;
+                _box.Invalidate();
+            }
         }
 
         // ===== 드로잉 =====
@@ -120,20 +132,40 @@ namespace _3D_VisionSource
 
             var rc = ImageRectToClient(_roiImg.Value);
 
-            using (var br = new SolidBrush(Fill))
-                g.FillRectangle(br, rc);
-            using (var pen = new Pen(Stroke, StrokeWidth))
-                g.DrawRectangle(pen, rc.X, rc.Y, rc.Width, rc.Height);
-
-            var handles = GetHandleRects(rc);
-            using (var brh = new SolidBrush(Color.White))
-            using (var penh = new Pen(Color.Black, 1f))
+            // 채움: 잠금 아닐 때만
+            if (!_locked)
             {
-                for (int i = 0; i < handles.Length; i++)
+                using (var br = new SolidBrush(Fill))
+                    g.FillRectangle(br, rc);
+            }
+
+            // 선: 상태별 색상/스타일
+            var outlineColor = _locked ? StrokeLocked : StrokeUnlocked;
+            using (var pen = new Pen(outlineColor, StrokeWidth))
+            {
+                if (_locked)
                 {
-                    var hr = handles[i];
-                    g.FillRectangle(brh, hr);
-                    g.DrawRectangle(penh, hr.X, hr.Y, hr.Width, hr.Height);
+                    // 확정된 느낌: 라임그린 점선
+                    pen.DashStyle = DashStyle.Dash;
+                    pen.DashPattern = new float[] { 4f, 3f };
+                }
+                // 잠금 전: 노란 실선 (기본)
+                g.DrawRectangle(pen, rc.X, rc.Y, rc.Width, rc.Height);
+            }
+
+            // 잠금이 아닐 때만 핸들 표시
+            if (!_locked)
+            {
+                var handles = GetHandleRects(rc);
+                using (var brh = new SolidBrush(Color.White))
+                using (var penh = new Pen(Color.Black, 1f))
+                {
+                    for (int i = 0; i < handles.Length; i++)
+                    {
+                        var hr = handles[i];
+                        g.FillRectangle(brh, hr);
+                        g.DrawRectangle(penh, hr.X, hr.Y, hr.Width, hr.Height);
+                    }
                 }
             }
         }
@@ -145,6 +177,9 @@ namespace _3D_VisionSource
             _box.Focus();
 
             _lastClient = e.Location;
+
+            // 잠금이면 편집 금지
+            if (_locked) return;
 
             if (_roiImg.HasValue && e.Button == MouseButtons.Left)
             {
@@ -170,6 +205,13 @@ namespace _3D_VisionSource
         private void OnBoxMouseMove(object sender, MouseEventArgs e)
         {
             if (_box.Image == null) return;
+
+            // 잠금이면 커서도 기본, 편집 로직 차단
+            if (_locked)
+            {
+                _box.Cursor = Cursors.Default;
+                return;
+            }
 
             var cur = e.Location;
 
@@ -289,15 +331,15 @@ namespace _3D_VisionSource
 
             return new[]
             {
-            new RectangleF(rcClient.Left - hs,      rcClient.Top - hs,       s, s), // 0 좌상
-            new RectangleF(cx - hs,                 rcClient.Top - hs,       s, s), // 1 상
-            new RectangleF(rcClient.Right - hs,     rcClient.Top - hs,       s, s), // 2 우상
-            new RectangleF(rcClient.Right - hs,     cy - hs,                 s, s), // 3 우
-            new RectangleF(rcClient.Right - hs,     rcClient.Bottom - hs,    s, s), // 4 우하
-            new RectangleF(cx - hs,                 rcClient.Bottom - hs,    s, s), // 5 하
-            new RectangleF(rcClient.Left - hs,      rcClient.Bottom - hs,    s, s), // 6 좌하
-            new RectangleF(rcClient.Left - hs,      cy - hs,                 s, s), // 7 좌
-        };
+                new RectangleF(rcClient.Left - hs,      rcClient.Top - hs,       s, s), // 0 좌상
+                new RectangleF(cx - hs,                 rcClient.Top - hs,       s, s), // 1 상
+                new RectangleF(rcClient.Right - hs,     rcClient.Top - hs,       s, s), // 2 우상
+                new RectangleF(rcClient.Right - hs,     cy - hs,                 s, s), // 3 우
+                new RectangleF(rcClient.Right - hs,     rcClient.Bottom - hs,    s, s), // 4 우하
+                new RectangleF(cx - hs,                 rcClient.Bottom - hs,    s, s), // 5 하
+                new RectangleF(rcClient.Left - hs,      rcClient.Bottom - hs,    s, s), // 6 좌하
+                new RectangleF(rcClient.Left - hs,      cy - hs,                 s, s), // 7 좌
+            };
         }
 
         private int HitTestHandle(RectangleF rcClient, Point ptClient)
@@ -312,6 +354,13 @@ namespace _3D_VisionSource
         private void UpdateCursorByHit(Point ptClient)
         {
             if (!_roiImg.HasValue)
+            {
+                _box.Cursor = Cursors.Default;
+                return;
+            }
+
+            // 잠금이면 기본 커서
+            if (_locked)
             {
                 _box.Cursor = Cursors.Default;
                 return;
