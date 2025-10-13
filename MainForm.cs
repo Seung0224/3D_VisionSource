@@ -153,7 +153,6 @@ namespace _3D_VisionSource
             }
             catch (Exception ex)
             {
-                Trace.WriteLine(ex);
                 UIMessageBox.ShowError("Fusion 실패\n" + ex.Message);
             }
         }
@@ -261,7 +260,6 @@ namespace _3D_VisionSource
             }
             catch (Exception ex)
             {
-                Trace.WriteLine(ex);
                 UIMessageTip.ShowWarning("Mat 로드 실패: " + ex.Message);
             }
 
