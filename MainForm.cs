@@ -133,7 +133,7 @@ namespace _3D_VisionSource
                 var roiRect = _roi.GetRoiImageRect();
 
                 // Inspect: Mat 기반 오버로드 사용 (경로/Bitmap 재-리드 없음)
-                var res = FusionEngine.Inspect(_intensityMat, zRaw, roiRectImg: roiRect, drawOverlay: true);
+                var res = FusionEngine.Inspect(_intensityMat, zRaw, roiRectImg: roiRect);
 
                 // 검사 결과 테이블
                 InspectionResultsTable.Bind(GV_3D_VISION_LOG, InspectionResultsTable.ToRows(res));

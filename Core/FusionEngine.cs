@@ -69,7 +69,7 @@ namespace _3D_VisionSource
         }
 
         #region Public API: Inspect
-        public static InspectionResults Inspect(Mat intensityMat, float[,] zRaw, System.Drawing.RectangleF? roiRectImg = null, bool drawOverlay = true)
+        public static InspectionResults Inspect(Mat intensityMat, float[,] zRaw, System.Drawing.RectangleF? roiRectImg = null, bool draw2DOverlay = true)
         {
             var sw = Stopwatch.StartNew();
             long last = 0L;
@@ -209,7 +209,7 @@ namespace _3D_VisionSource
                 lap("find-contours");
 
                 Bitmap overlayBmp = null;
-                if (drawOverlay)
+                if (draw2DOverlay)
                 {
                     Mat imColor;
                     {
