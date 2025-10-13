@@ -1,5 +1,6 @@
 ﻿using _3D_VisionSource.Viewer;
 using Cyotek.Windows.Forms;
+using HelixToolkit.Wpf.SharpDX;
 using OpenCvSharp;
 using Sunny.UI;
 using System;
@@ -19,7 +20,7 @@ namespace _3D_VisionSource
         #region Fields
         // Viwer 및 Image 관련 Fields
         private Viewer3DControl _viewer = null;
-        private Image _intensityImg = null, _zmapImg = null; 
+        private Image _intensityImg = null, _zmapImg = null;
         private Mat _intensityMat = null, _zmapMat = null;   // 처리용 Mat
         private string _intensityPath = null, _zMapPath = null;
         private float[,] _zRawCache = null;
@@ -123,10 +124,6 @@ namespace _3D_VisionSource
                 {
                     if (_zmapMat.Type() == MatType.CV_16UC1)
                         zRaw = FusionEngine.LoadZ16(_zmapMat);
-                    else if (_zmapMat.Type() == MatType.CV_8UC1)
-                        zRaw = FusionEngine.LoadZ8(_zmapMat);
-                    else if (_zmapMat.Type() == MatType.CV_8UC4)
-                        zRaw = FusionEngine.LoadZ16FromArgb32(_zmapMat);
                     else
                         throw new NotSupportedException($"지원하지 않는 Z 포맷: {_zmapMat.Type()}");
 
@@ -245,6 +242,7 @@ namespace _3D_VisionSource
                 }
             }
 
+            OverlayDisplayClear();
             RefreshUI();
 
             try
@@ -261,10 +259,6 @@ namespace _3D_VisionSource
                 {
                     if (_zmapMat.Type() == MatType.CV_16UC1)
                         _zRawCache = FusionEngine.LoadZ16(_zmapMat);
-                    else if (_zmapMat.Type() == MatType.CV_8UC1)
-                        _zRawCache = FusionEngine.LoadZ8(_zmapMat);
-                    else if (_zmapMat.Type() == MatType.CV_8UC4) // 32bpp ARGB → BGRA
-                        _zRawCache = FusionEngine.LoadZ16FromArgb32(_zmapMat);
                     else
                         UIMessageTip.ShowWarning($"지원하지 않는 Z 포맷: {_zmapMat.Type()}");
                 }
@@ -273,7 +267,6 @@ namespace _3D_VisionSource
             {
                 UIMessageTip.ShowWarning("Mat 로드 실패: " + ex.Message);
             }
-
         }
         /// 패널 텍스트 및 2D 프리뷰 동시 갱신
         private void RefreshUI()
@@ -384,6 +377,7 @@ namespace _3D_VisionSource
                 }
             }
         }
+
         /// 2D/3D/Host 자원 일괄 해제
         private void DisposeResources()
         {
@@ -399,6 +393,38 @@ namespace _3D_VisionSource
             try { if (_viewer is IDisposable) ((IDisposable)_viewer).Dispose(); _viewer = null; } catch { }
             try { ViewerHost.Child = null; } catch { }
             try { ViewerHost.Dispose(); } catch { }
+        }
+
+        private void OverlayDisplayClear()
+        {
+            // 2D 오버레이 정리 (Bitmap 핸들 해제)
+            if (TWODImageBox.Image is Bitmap bmp)
+            {
+                try { bmp.Dispose(); } catch { /* ignore */ }
+            }
+            TWODImageBox.Image = null;
+
+            // 3D 뷰 정리 (Geometry/Material/IDisposable 해제 후 Clear)
+            var items = _viewer.Viewport.Items.ToArray(); // 컬렉션 복사 후 순회
+            foreach (var el in items)
+            {
+                if (el is HelixToolkit.Wpf.SharpDX.MeshGeometryModel3D mg)
+                {
+                    mg.Geometry = null;
+                    mg.Material = null;
+                }
+                else if (el is HelixToolkit.Wpf.SharpDX.LineGeometryModel3D lg)
+                {
+                    lg.Geometry = null;
+                    // lg.Color = Colors.Transparent; // 필요시
+                }
+                else if (el is HelixToolkit.Wpf.SharpDX.PointGeometryModel3D pg)
+                {
+                    pg.Geometry = null;
+                }
+                (el as IDisposable)?.Dispose(); // 가능하면 자원 해제
+            }
+            _viewer.Viewport.Items.Clear();
         }
 
         #endregion

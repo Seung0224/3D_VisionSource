@@ -2,7 +2,7 @@
 using SharpDX;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;            // [LOG]
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Globalization;
@@ -14,15 +14,12 @@ using MediaColor = System.Windows.Media.Color;
 
 namespace _3D_VisionSource
 {
-    // 이 Parameter를 비롯한 Calibration 값들을 정확히 넣어야 정확한 값 산출 가능
+    #region Models
     public class InspectionParams
     {
 #if false
-        // CanCap Bead 기준 FOV = 11mm / 1920px = 0.0057mm/px
         public float Sx = 0.0057f;
-        // CanCap Bead 기준 Y 분해능 25um
         public float Sy = 0.025f;
-        // Z = 4.1um
         public float ZScale = 0.0041f;
 #else
         public float Sx = 0.05f;
@@ -34,7 +31,7 @@ namespace _3D_VisionSource
         public ushort InvalidZ16 = 0;
         public bool CenterOrigin = true;
         public double MinAreaMm2 = 0.001;
-        public double OverlayAlpha = 0.35;
+        public double OverlayAlpha = 0.25;
     }
 
     public class InspectionResults
@@ -43,69 +40,22 @@ namespace _3D_VisionSource
         public MediaColor[] Colors;
         public int Width;
         public int Height;
-
         public Mat HoleMask;
         public List<OpenCvSharp.Point[]> ContoursPx;
-
         public List<int> CompLabels;
         public List<int> CompAreaPx;
         public List<double> CompAreaMm2;
         public List<OpenCvSharp.Rect> CompBBox;
         public List<OpenCvSharp.Point> CompCentroidPx;
-
         public Bitmap Overlay2D;
     }
+    #endregion
 
     public static class FusionEngine
     {
         static readonly InspectionParams P = new InspectionParams();
 
-        // ========================= [LOG] 로깅 훅 =========================
-        public interface IFusionLogger { void Log(string message); }
-        public static IFusionLogger LogSink { get; set; }
-
-        static void Log(string format, params object[] args)
-        {
-            var sink = LogSink;
-            if (sink == null) return;
-            var msg = (args == null || args.Length == 0)
-                ? format
-                : string.Format(CultureInfo.InvariantCulture, format, args);
-            sink.Log(msg);
-        }
-        // ===============================================================
-
         public enum ArgbByteIndex : int { B = 0, G = 1, R = 2, A = 3 }
-
-        public static float[,] LoadZ16FromArgb32(Mat zMat)
-        {
-            ArgbByteIndex lowByte = ArgbByteIndex.B;
-            ArgbByteIndex highByte = ArgbByteIndex.G;
-            bool bigEndian = false;
-
-            int h = zMat.Rows, w = zMat.Cols;
-            var outArr = new float[h, w];
-
-            var idx = zMat.GetGenericIndexer<Vec4b>();
-            int lo = (int)lowByte, hi = (int)highByte;
-
-            for (int y = 0; y < h; y++)
-            {
-                for (int x = 0; x < w; x++)
-                {
-                    var px = idx[y, x]; // BGRA
-                    byte bLow = px[lo];
-                    byte bHigh = px[hi];
-
-                    ushort v = bigEndian
-                        ? (ushort)((bLow << 8) | bHigh)
-                        : (ushort)(bLow | (bHigh << 8));
-
-                    outArr[y, x] = v;
-                }
-            }
-            return outArr;
-        }
 
         public static float[,] LoadZ16(Mat zMat)
         {
@@ -118,20 +68,9 @@ namespace _3D_VisionSource
             return outArr;
         }
 
-        public static float[,] LoadZ8(Mat zMat)
-        {
-            int h = zMat.Rows, w = zMat.Cols;
-            var outArr = new float[h, w];
-            var idx = zMat.GetGenericIndexer<byte>();
-            for (int y = 0; y < h; y++)
-                for (int x = 0; x < w; x++)
-                    outArr[y, x] = idx[y, x];
-            return outArr;
-        }
-
+        #region Public API: Inspect
         public static InspectionResults Inspect(Mat intensityMat, float[,] zRaw, System.Drawing.RectangleF? roiRectImg = null, bool drawOverlay = true)
         {
-            // [LOG] 타이머 & 랩 유틸
             var sw = Stopwatch.StartNew();
             long last = 0L;
             Action<string> lap = name =>
@@ -143,14 +82,12 @@ namespace _3D_VisionSource
 
             try
             {
-                // Intensity와 Z 크기가 다를 수 있으니, 두 쪽의 공통 영역(H, W)만 사용
                 int H = Math.Min(intensityMat.Rows, zRaw.GetLength(0));
                 int W = Math.Min(intensityMat.Cols, zRaw.GetLength(1));
                 var im = intensityMat[0, H, 0, W];
                 Log("Inspect start: H={0}, W={1} ", H, W);
                 lap("slice");
 
-                // Z의 유효/무효 마스크
                 var mask = new bool[H, W];
                 int validCount = 0;
                 for (int y = 0; y < H; y++)
@@ -171,9 +108,7 @@ namespace _3D_VisionSource
                 var pts = new Point3D[validCount];
                 var cols = new MediaColor[validCount];
 
-                // (단순화) 4채널 BGRA 기준 회색 변환 인덱서
                 var idx = im.GetGenericIndexer<Vec4b>();
-
                 int k = 0;
                 for (int y = 0; y < H; y++)
                     for (int x = 0; x < W; x++)
@@ -192,24 +127,14 @@ namespace _3D_VisionSource
                     }
                 lap("pointcloud+color");
 
-                // ROI: 파일 or 자동
-                Mat roi;
-                if (roiRectImg.HasValue)
-                {
-                    roi = BuildRoiFromRect(roiRectImg.Value, H, W);  // ⬅ 사각형 마스크
-                    lap("ROI Mode On");
-                }
-                else
-                {
-                    roi = BuildRoiAuto(zRaw, H, W);
-                    lap("A-ROI Mode On");
-                }
+                Mat roi = roiRectImg.HasValue
+                    ? BuildRoiFromRect(roiRectImg.Value, H, W)
+                    : BuildRoiAuto(zRaw, H, W);
+                lap(roiRectImg.HasValue ? "ROI Mode On" : "A-ROI Mode On");
 
-                // ROI 경계 잡음 제거(침식)
                 Cv2.Erode(roi, roi, Cv2.GetStructuringElement(MorphShapes.Rect, new OpenCvSharp.Size(3, 3)));
                 lap("roi-erode");
 
-                // valid(유효 Z) 8U 마스크
                 var valid = new Mat(H, W, MatType.CV_8UC1);
                 unsafe
                 {
@@ -224,32 +149,26 @@ namespace _3D_VisionSource
                 }
                 lap("valid-mat8u");
 
-                // hole = ROI ∧ ¬valid
                 var hole = new Mat();
                 var notValid = new Mat();
                 Cv2.BitwiseNot(valid, notValid);
                 Cv2.BitwiseAnd(notValid, roi, hole);
                 lap("hole-build");
 
-                // 잡음 정리(열기/닫기)
                 var k3 = Cv2.GetStructuringElement(MorphShapes.Rect, new OpenCvSharp.Size(3, 3));
                 Cv2.MorphologyEx(hole, hole, MorphTypes.Open, k3);
                 Cv2.MorphologyEx(hole, hole, MorphTypes.Close, k3);
                 lap("morph-open-close");
 
-                // 레이블링
                 var labels = new Mat();
                 var stats = new Mat();
                 var cents = new Mat();
-                int n = Cv2.ConnectedComponentsWithStats(
-                    hole, labels, stats, cents,
-                    PixelConnectivity.Connectivity8, MatType.CV_32S);
+                int n = Cv2.ConnectedComponentsWithStats(hole, labels, stats, cents, PixelConnectivity.Connectivity8, MatType.CV_32S);
                 lap("cc-label");
 
                 double pxAreaToMm2 = P.Sx * P.Sy;
 
                 var keepMask = new Mat(H, W, MatType.CV_8UC1, Scalar.All(0));
-
                 var compLabels = new List<int>();
                 var compAreaPx = new List<int>();
                 var compAreaMm2 = new List<double>();
@@ -320,11 +239,9 @@ namespace _3D_VisionSource
                         var bb = compBBox[i];
                         var txt = $"{i + 1}:{FormatArea(compAreaMm2[i])}";
 
-                        // 기본 위치: 박스 오른쪽
                         int x = bb.Right + 4;
                         int y = Math.Max(12, Math.Min(imColor.Rows - 4, bb.Top + 12));
 
-                        // 오른쪽 여백 부족하면 박스 아래
                         if (x > imColor.Cols - 40)
                         {
                             x = Math.Max(0, bb.Left);
@@ -362,29 +279,12 @@ namespace _3D_VisionSource
                 throw;
             }
         }
-      
-        static void DrawLabelThin(Mat img, string text, OpenCvSharp.Point org, double scale = 0.4, int thickness = 1)
-        {
-            // 외곽선
-            Cv2.PutText(img, text, org,
-                HersheyFonts.HersheySimplex, scale, new Scalar(0, 0, 0), thickness + 1, LineTypes.AntiAlias);
-            // 본문(노랑)
-            Cv2.PutText(img, text, org,
-                HersheyFonts.HersheySimplex, scale, new Scalar(0, 255, 255), thickness, LineTypes.AntiAlias);
-        }
+        #endregion
 
-        static string FormatArea(double a)
-        {
-            var inv = System.Globalization.CultureInfo.InvariantCulture;
-            if (a < 1e-3) return (a * 1e6).ToString("F0", inv) + " µm^2";
-            if (a < 1) return a.ToString("F3", inv) + " mm^2";
-            if (a < 10) return a.ToString("F2", inv) + " mm^2";
-            return a.ToString("F1", inv) + " mm^2";
-        }
-        /// 2D 컨투어를 3D 라인 루프로 변환
+        #region Public API: 3D conversions
         public static List<Point3D[]> Make3DContourLoops(InspectionResults res, float[,] zRaw, int neighbor = 2)
         {
-            var sw = Stopwatch.StartNew();  // [LOG]
+            var sw = Stopwatch.StartNew();
             try
             {
                 if (res == null || res.ContoursPx == null || res.ContoursPx.Count == 0)
@@ -422,69 +322,10 @@ namespace _3D_VisionSource
                 throw;
             }
         }
-        // 새 헬퍼 추가: 이미지 좌표 사각형 → 8U 마스크
-        static OpenCvSharp.Mat BuildRoiFromRect(System.Drawing.RectangleF rImg, int H, int W)
-        {
-            var roi = new Mat(H, W, MatType.CV_8UC1, Scalar.All(0));
 
-            // 클램프 & 정수화
-            int x = Math.Max(0, Math.Min(W - 1, (int)Math.Floor(rImg.X)));
-            int y = Math.Max(0, Math.Min(H - 1, (int)Math.Floor(rImg.Y)));
-            int rw = Math.Max(0, Math.Min(W - x, (int)Math.Ceiling(rImg.Width)));
-            int rh = Math.Max(0, Math.Min(H - y, (int)Math.Ceiling(rImg.Height)));
-
-            if (rw > 0 && rh > 0)
-                Cv2.Rectangle(roi, new OpenCvSharp.Rect(x, y, rw, rh), Scalar.All(255), -1, LineTypes.Link8);
-
-            return roi;
-        }
-
-
-        // Z 유효영역의 최대성분으로 생성
-        private static OpenCvSharp.Mat BuildRoiAuto(float[,] zRaw, int H, int W)
-        {
-            var valid = new OpenCvSharp.Mat(H, W, OpenCvSharp.MatType.CV_8UC1);
-            unsafe
-            {
-                byte* vp = (byte*)valid.Data;
-                int step = (int)valid.Step();
-                for (int y = 0; y < H; y++)
-                {
-                    int row = y * step;
-                    for (int x = 0; x < W; x++)
-                    {
-                        float v = zRaw[y, x];
-                        bool ok = (v != P.InvalidZ16); // 16-bit 원천 가정(무효값과 비교)
-                        vp[row + x] = ok ? (byte)255 : (byte)0;
-                    }
-                }
-            }
-
-            var k5 = OpenCvSharp.Cv2.GetStructuringElement(OpenCvSharp.MorphShapes.Rect, new OpenCvSharp.Size(5, 5));
-            OpenCvSharp.Cv2.MorphologyEx(valid, valid, OpenCvSharp.MorphTypes.Close, k5);
-            OpenCvSharp.Cv2.MorphologyEx(valid, valid, OpenCvSharp.MorphTypes.Open, k5);
-
-            OpenCvSharp.Cv2.FindContours(valid, out var cnts, out _, OpenCvSharp.RetrievalModes.External, OpenCvSharp.ContourApproximationModes.ApproxSimple);
-
-            var roiAuto = new OpenCvSharp.Mat(H, W, OpenCvSharp.MatType.CV_8UC1, OpenCvSharp.Scalar.All(0));
-            if (cnts != null && cnts.Length > 0)
-            {
-                int best = 0; double bestA = 0;
-                for (int i = 0; i < cnts.Length; i++)
-                {
-                    double a = OpenCvSharp.Cv2.ContourArea(cnts[i]);
-                    if (a > bestA) { bestA = a; best = i; }
-                }
-                OpenCvSharp.Cv2.DrawContours(roiAuto, new[] { cnts[best] }, -1, OpenCvSharp.Scalar.All(255), -1);
-            }
-            return roiAuto;
-        }
-
-
-        /// 결손 영역을 3D 채움 메쉬로 생성
         public static HT.MeshGeometry3D[] Make3DFilledMeshes(InspectionResults res, float[,] zRaw, int neighbor = 2, double approxEpsPx = 1.5)
         {
-            var sw = Stopwatch.StartNew();  // [LOG]
+            var sw = Stopwatch.StartNew();
             try
             {
                 if (res == null || res.ContoursPx == null || res.ContoursPx.Count == 0)
@@ -530,7 +371,65 @@ namespace _3D_VisionSource
                 throw;
             }
         }
+        #endregion
 
+        #region ROI Builders
+        static OpenCvSharp.Mat BuildRoiFromRect(System.Drawing.RectangleF rImg, int H, int W)
+        {
+            var roi = new Mat(H, W, MatType.CV_8UC1, Scalar.All(0));
+
+            int x = Math.Max(0, Math.Min(W - 1, (int)Math.Floor(rImg.X)));
+            int y = Math.Max(0, Math.Min(H - 1, (int)Math.Floor(rImg.Y)));
+            int rw = Math.Max(0, Math.Min(W - x, (int)Math.Ceiling(rImg.Width)));
+            int rh = Math.Max(0, Math.Min(H - y, (int)Math.Ceiling(rImg.Height)));
+
+            if (rw > 0 && rh > 0)
+                Cv2.Rectangle(roi, new OpenCvSharp.Rect(x, y, rw, rh), Scalar.All(255), -1, LineTypes.Link8);
+
+            return roi;
+        }
+
+        static OpenCvSharp.Mat BuildRoiAuto(float[,] zRaw, int H, int W)
+        {
+            var valid = new OpenCvSharp.Mat(H, W, OpenCvSharp.MatType.CV_8UC1);
+            unsafe
+            {
+                byte* vp = (byte*)valid.Data;
+                int step = (int)valid.Step();
+                for (int y = 0; y < H; y++)
+                {
+                    int row = y * step;
+                    for (int x = 0; x < W; x++)
+                    {
+                        float v = zRaw[y, x];
+                        bool ok = (v != P.InvalidZ16);
+                        vp[row + x] = ok ? (byte)255 : (byte)0;
+                    }
+                }
+            }
+
+            var k5 = Cv2.GetStructuringElement(MorphShapes.Rect, new OpenCvSharp.Size(5, 5));
+            Cv2.MorphologyEx(valid, valid, MorphTypes.Close, k5);
+            Cv2.MorphologyEx(valid, valid, MorphTypes.Open, k5);
+
+            Cv2.FindContours(valid, out var cnts, out _, RetrievalModes.External, ContourApproximationModes.ApproxSimple);
+
+            var roiAuto = new Mat(H, W, MatType.CV_8UC1, Scalar.All(0));
+            if (cnts != null && cnts.Length > 0)
+            {
+                int best = 0; double bestA = 0;
+                for (int i = 0; i < cnts.Length; i++)
+                {
+                    double a = Cv2.ContourArea(cnts[i]);
+                    if (a > bestA) { bestA = a; best = i; }
+                }
+                Cv2.DrawContours(roiAuto, new[] { cnts[best] }, -1, Scalar.All(255), -1);
+            }
+            return roiAuto;
+        }
+        #endregion
+
+        #region Helpers
         static int MapIndex(OpenCvSharp.Point[] c, int i, Dictionary<int, int> map,
                             HT.Vector3Collection pos, int W, int H, double cx, double cy,
                             float[,] zRaw, int neighbor)
@@ -663,5 +562,35 @@ namespace _3D_VisionSource
             if (v > hi) return hi;
             return v;
         }
+
+        static void DrawLabelThin(Mat img, string text, OpenCvSharp.Point org, double scale = 0.4, int thickness = 1)
+        {
+            Cv2.PutText(img, text, org, HersheyFonts.HersheySimplex, scale, new Scalar(0, 0, 0), thickness + 1, LineTypes.AntiAlias);
+            Cv2.PutText(img, text, org, HersheyFonts.HersheySimplex, scale, new Scalar(0, 255, 255), thickness, LineTypes.AntiAlias);
+        }
+
+        static string FormatArea(double a)
+        {
+            var inv = CultureInfo.InvariantCulture;
+            if (a < 1e-3) return (a * 1e6).ToString("F0", inv) + " µm^2";
+            if (a < 1) return a.ToString("F3", inv) + " mm^2";
+            if (a < 10) return a.ToString("F2", inv) + " mm^2";
+            return a.ToString("F1", inv) + " mm^2";
+        }
+        #endregion
+
+        #region Logging
+        public interface IFusionLogger { void Log(string message); }
+        public static IFusionLogger LogSink { get; set; }
+        static void Log(string format, params object[] args)
+        {
+            var sink = LogSink;
+            if (sink == null) return;
+            var msg = (args == null || args.Length == 0)
+                ? format
+                : string.Format(CultureInfo.InvariantCulture, format, args);
+            sink.Log(msg);
+        }
+        #endregion
     }
 }
