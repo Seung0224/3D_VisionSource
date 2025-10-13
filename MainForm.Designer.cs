@@ -28,6 +28,11 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.MainUITLP = new Sunny.UI.UITableLayoutPanel();
             this.TWODImageBox = new Cyotek.Windows.Forms.ImageBox();
@@ -36,6 +41,8 @@
             this.TWODPanelUI = new Sunny.UI.UIPanel();
             this.ZMapPanelUI = new Sunny.UI.UIPanel();
             this.ButtonUITLP = new Sunny.UI.UITableLayoutPanel();
+            this.BTN_3D_VISION_LOG_DATA_CLEAR = new Sunny.UI.UISymbolButton();
+            this.BTN_3D_VISION_LOG_CLEAR = new Sunny.UI.UISymbolButton();
             this.BTN_SHOW_ROI = new Sunny.UI.UISymbolButton();
             this.BTN_SET_ROI = new Sunny.UI.UISymbolButton();
             this.uiTableLayoutPanel1 = new Sunny.UI.UITableLayoutPanel();
@@ -45,17 +52,18 @@
             this.PNL_INTENSITY_PATH = new Sunny.UI.UIPanel();
             this.BTN_INENSITY_PATH_SEARCH = new Sunny.UI.UIButton();
             this.BTN_IMAGE_FUSION = new Sunny.UI.UISymbolButton();
+            this.LB_3D_VISION_LOG = new Sunny.UI.UIListBox();
+            this.GV_3D_VISION_LOG = new Sunny.UI.UIDataGridView();
             this.MainUIPanel = new Sunny.UI.UIPanel();
             this.ViewerHost = new System.Windows.Forms.Integration.ElementHost();
             this.BTN_IMAGE_OPEN = new Sunny.UI.UISymbolButton();
             this.IntensityPanelUI = new Sunny.UI.UIPanel();
             this.IntensityImageBox = new Cyotek.Windows.Forms.ImageBox();
-            this.LB_3D_VISION_LOG = new Sunny.UI.UIListBox();
-            this.BTN_3D_VISION_LOG_CLEAR = new Sunny.UI.UISymbolButton();
             this.MainUITLP.SuspendLayout();
             this.ButtonUITLP.SuspendLayout();
             this.uiTableLayoutPanel1.SuspendLayout();
             this.TLP_INTENSITY.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.GV_3D_VISION_LOG)).BeginInit();
             this.MainUIPanel.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -152,6 +160,7 @@
             this.ButtonUITLP.AutoSize = true;
             this.ButtonUITLP.ColumnCount = 1;
             this.ButtonUITLP.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.ButtonUITLP.Controls.Add(this.BTN_3D_VISION_LOG_DATA_CLEAR, 0, 8);
             this.ButtonUITLP.Controls.Add(this.BTN_3D_VISION_LOG_CLEAR, 0, 6);
             this.ButtonUITLP.Controls.Add(this.BTN_SHOW_ROI, 0, 2);
             this.ButtonUITLP.Controls.Add(this.BTN_SET_ROI, 0, 3);
@@ -159,10 +168,11 @@
             this.ButtonUITLP.Controls.Add(this.TLP_INTENSITY, 0, 0);
             this.ButtonUITLP.Controls.Add(this.BTN_IMAGE_FUSION, 0, 4);
             this.ButtonUITLP.Controls.Add(this.LB_3D_VISION_LOG, 0, 5);
+            this.ButtonUITLP.Controls.Add(this.GV_3D_VISION_LOG, 0, 7);
             this.ButtonUITLP.Location = new System.Drawing.Point(1076, 40);
             this.ButtonUITLP.Margin = new System.Windows.Forms.Padding(0, 0, 2, 0);
             this.ButtonUITLP.Name = "ButtonUITLP";
-            this.ButtonUITLP.RowCount = 8;
+            this.ButtonUITLP.RowCount = 9;
             this.ButtonUITLP.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
             this.ButtonUITLP.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
             this.ButtonUITLP.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
@@ -171,9 +181,46 @@
             this.ButtonUITLP.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 250F));
             this.ButtonUITLP.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
             this.ButtonUITLP.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 250F));
-            this.ButtonUITLP.Size = new System.Drawing.Size(344, 725);
+            this.ButtonUITLP.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
+            this.ButtonUITLP.Size = new System.Drawing.Size(344, 750);
             this.ButtonUITLP.TabIndex = 0;
             this.ButtonUITLP.TagString = null;
+            // 
+            // BTN_3D_VISION_LOG_DATA_CLEAR
+            // 
+            this.BTN_3D_VISION_LOG_DATA_CLEAR.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.BTN_3D_VISION_LOG_DATA_CLEAR.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.BTN_3D_VISION_LOG_DATA_CLEAR.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(210)))), ((int)(((byte)(235)))), ((int)(((byte)(255)))));
+            this.BTN_3D_VISION_LOG_DATA_CLEAR.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.BTN_3D_VISION_LOG_DATA_CLEAR.ForeColor = System.Drawing.Color.Black;
+            this.BTN_3D_VISION_LOG_DATA_CLEAR.Location = new System.Drawing.Point(3, 728);
+            this.BTN_3D_VISION_LOG_DATA_CLEAR.MinimumSize = new System.Drawing.Size(1, 1);
+            this.BTN_3D_VISION_LOG_DATA_CLEAR.Name = "BTN_3D_VISION_LOG_DATA_CLEAR";
+            this.BTN_3D_VISION_LOG_DATA_CLEAR.Size = new System.Drawing.Size(338, 19);
+            this.BTN_3D_VISION_LOG_DATA_CLEAR.Symbol = 558684;
+            this.BTN_3D_VISION_LOG_DATA_CLEAR.SymbolColor = System.Drawing.Color.Black;
+            this.BTN_3D_VISION_LOG_DATA_CLEAR.TabIndex = 18;
+            this.BTN_3D_VISION_LOG_DATA_CLEAR.Text = "Data Clear";
+            this.BTN_3D_VISION_LOG_DATA_CLEAR.TipsFont = new System.Drawing.Font("굴림", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.BTN_3D_VISION_LOG_DATA_CLEAR.Click += new System.EventHandler(this.BTN_3D_VISION_LOG_DATA_CLEAR_Click);
+            // 
+            // BTN_3D_VISION_LOG_CLEAR
+            // 
+            this.BTN_3D_VISION_LOG_CLEAR.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.BTN_3D_VISION_LOG_CLEAR.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.BTN_3D_VISION_LOG_CLEAR.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(210)))), ((int)(((byte)(235)))), ((int)(((byte)(255)))));
+            this.BTN_3D_VISION_LOG_CLEAR.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.BTN_3D_VISION_LOG_CLEAR.ForeColor = System.Drawing.Color.Black;
+            this.BTN_3D_VISION_LOG_CLEAR.Location = new System.Drawing.Point(3, 453);
+            this.BTN_3D_VISION_LOG_CLEAR.MinimumSize = new System.Drawing.Size(1, 1);
+            this.BTN_3D_VISION_LOG_CLEAR.Name = "BTN_3D_VISION_LOG_CLEAR";
+            this.BTN_3D_VISION_LOG_CLEAR.Size = new System.Drawing.Size(338, 19);
+            this.BTN_3D_VISION_LOG_CLEAR.Symbol = 557913;
+            this.BTN_3D_VISION_LOG_CLEAR.SymbolColor = System.Drawing.Color.Black;
+            this.BTN_3D_VISION_LOG_CLEAR.TabIndex = 16;
+            this.BTN_3D_VISION_LOG_CLEAR.Text = "Log Clear";
+            this.BTN_3D_VISION_LOG_CLEAR.TipsFont = new System.Drawing.Font("굴림", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.BTN_3D_VISION_LOG_CLEAR.Click += new System.EventHandler(this.BTN_3D_VISION_LOG_CLEAR_Click);
             // 
             // BTN_SHOW_ROI
             // 
@@ -317,6 +364,68 @@
             this.BTN_IMAGE_FUSION.TipsFont = new System.Drawing.Font("굴림", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.BTN_IMAGE_FUSION.Click += new System.EventHandler(this.BTN_IMAGE_FUSION_Click);
             // 
+            // LB_3D_VISION_LOG
+            // 
+            this.LB_3D_VISION_LOG.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.LB_3D_VISION_LOG.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.LB_3D_VISION_LOG.HoverColor = System.Drawing.Color.FromArgb(((int)(((byte)(155)))), ((int)(((byte)(200)))), ((int)(((byte)(255)))));
+            this.LB_3D_VISION_LOG.ItemSelectForeColor = System.Drawing.Color.White;
+            this.LB_3D_VISION_LOG.Location = new System.Drawing.Point(4, 205);
+            this.LB_3D_VISION_LOG.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.LB_3D_VISION_LOG.MinimumSize = new System.Drawing.Size(1, 1);
+            this.LB_3D_VISION_LOG.Name = "LB_3D_VISION_LOG";
+            this.LB_3D_VISION_LOG.Padding = new System.Windows.Forms.Padding(2);
+            this.LB_3D_VISION_LOG.ShowText = false;
+            this.LB_3D_VISION_LOG.Size = new System.Drawing.Size(336, 240);
+            this.LB_3D_VISION_LOG.TabIndex = 15;
+            this.LB_3D_VISION_LOG.Text = null;
+            // 
+            // GV_3D_VISION_LOG
+            // 
+            dataGridViewCellStyle1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(235)))), ((int)(((byte)(243)))), ((int)(((byte)(255)))));
+            this.GV_3D_VISION_LOG.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
+            this.GV_3D_VISION_LOG.BackgroundColor = System.Drawing.Color.White;
+            this.GV_3D_VISION_LOG.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single;
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(80)))), ((int)(((byte)(160)))), ((int)(((byte)(255)))));
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            dataGridViewCellStyle2.ForeColor = System.Drawing.Color.White;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.GV_3D_VISION_LOG.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
+            this.GV_3D_VISION_LOG.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle3.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            dataGridViewCellStyle3.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(48)))), ((int)(((byte)(48)))), ((int)(((byte)(48)))));
+            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.GV_3D_VISION_LOG.DefaultCellStyle = dataGridViewCellStyle3;
+            this.GV_3D_VISION_LOG.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.GV_3D_VISION_LOG.EnableHeadersVisualStyles = false;
+            this.GV_3D_VISION_LOG.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.GV_3D_VISION_LOG.GridColor = System.Drawing.Color.FromArgb(((int)(((byte)(80)))), ((int)(((byte)(160)))), ((int)(((byte)(255)))));
+            this.GV_3D_VISION_LOG.Location = new System.Drawing.Point(3, 478);
+            this.GV_3D_VISION_LOG.Name = "GV_3D_VISION_LOG";
+            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle4.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(235)))), ((int)(((byte)(243)))), ((int)(((byte)(255)))));
+            dataGridViewCellStyle4.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            dataGridViewCellStyle4.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(48)))), ((int)(((byte)(48)))), ((int)(((byte)(48)))));
+            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(80)))), ((int)(((byte)(160)))), ((int)(((byte)(255)))));
+            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.Color.White;
+            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.GV_3D_VISION_LOG.RowHeadersDefaultCellStyle = dataGridViewCellStyle4;
+            dataGridViewCellStyle5.BackColor = System.Drawing.Color.White;
+            dataGridViewCellStyle5.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.GV_3D_VISION_LOG.RowsDefaultCellStyle = dataGridViewCellStyle5;
+            this.GV_3D_VISION_LOG.RowTemplate.Height = 23;
+            this.GV_3D_VISION_LOG.SelectedIndex = -1;
+            this.GV_3D_VISION_LOG.Size = new System.Drawing.Size(338, 244);
+            this.GV_3D_VISION_LOG.StripeOddColor = System.Drawing.Color.FromArgb(((int)(((byte)(235)))), ((int)(((byte)(243)))), ((int)(((byte)(255)))));
+            this.GV_3D_VISION_LOG.TabIndex = 17;
+            // 
             // MainUIPanel
             // 
             this.MainUIPanel.Controls.Add(this.ViewerHost);
@@ -385,39 +494,6 @@
             this.IntensityImageBox.Size = new System.Drawing.Size(263, 774);
             this.IntensityImageBox.TabIndex = 12;
             // 
-            // LB_3D_VISION_LOG
-            // 
-            this.LB_3D_VISION_LOG.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.LB_3D_VISION_LOG.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.LB_3D_VISION_LOG.HoverColor = System.Drawing.Color.FromArgb(((int)(((byte)(155)))), ((int)(((byte)(200)))), ((int)(((byte)(255)))));
-            this.LB_3D_VISION_LOG.ItemSelectForeColor = System.Drawing.Color.White;
-            this.LB_3D_VISION_LOG.Location = new System.Drawing.Point(4, 205);
-            this.LB_3D_VISION_LOG.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.LB_3D_VISION_LOG.MinimumSize = new System.Drawing.Size(1, 1);
-            this.LB_3D_VISION_LOG.Name = "LB_3D_VISION_LOG";
-            this.LB_3D_VISION_LOG.Padding = new System.Windows.Forms.Padding(2);
-            this.LB_3D_VISION_LOG.ShowText = false;
-            this.LB_3D_VISION_LOG.Size = new System.Drawing.Size(336, 240);
-            this.LB_3D_VISION_LOG.TabIndex = 15;
-            // 
-            // BTN_3D_VISION_LOG_CLEAR
-            // 
-            this.BTN_3D_VISION_LOG_CLEAR.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.BTN_3D_VISION_LOG_CLEAR.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.BTN_3D_VISION_LOG_CLEAR.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(210)))), ((int)(((byte)(235)))), ((int)(((byte)(255)))));
-            this.BTN_3D_VISION_LOG_CLEAR.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.BTN_3D_VISION_LOG_CLEAR.ForeColor = System.Drawing.Color.Black;
-            this.BTN_3D_VISION_LOG_CLEAR.Location = new System.Drawing.Point(3, 453);
-            this.BTN_3D_VISION_LOG_CLEAR.MinimumSize = new System.Drawing.Size(1, 1);
-            this.BTN_3D_VISION_LOG_CLEAR.Name = "BTN_3D_VISION_LOG_CLEAR";
-            this.BTN_3D_VISION_LOG_CLEAR.Size = new System.Drawing.Size(338, 19);
-            this.BTN_3D_VISION_LOG_CLEAR.Symbol = 557913;
-            this.BTN_3D_VISION_LOG_CLEAR.SymbolColor = System.Drawing.Color.Black;
-            this.BTN_3D_VISION_LOG_CLEAR.TabIndex = 16;
-            this.BTN_3D_VISION_LOG_CLEAR.Text = "Log Clear";
-            this.BTN_3D_VISION_LOG_CLEAR.TipsFont = new System.Drawing.Font("굴림", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.BTN_3D_VISION_LOG_CLEAR.Click += new System.EventHandler(this.BTN_3D_VISION_LOG_CLEAR_Click);
-            // 
             // MainForm
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
@@ -435,6 +511,7 @@
             this.ButtonUITLP.ResumeLayout(false);
             this.uiTableLayoutPanel1.ResumeLayout(false);
             this.TLP_INTENSITY.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.GV_3D_VISION_LOG)).EndInit();
             this.MainUIPanel.ResumeLayout(false);
             this.ResumeLayout(false);
 
@@ -465,6 +542,8 @@
         private Sunny.UI.UISymbolButton BTN_SHOW_ROI;
         private Sunny.UI.UIListBox LB_3D_VISION_LOG;
         private Sunny.UI.UISymbolButton BTN_3D_VISION_LOG_CLEAR;
+        private Sunny.UI.UIDataGridView GV_3D_VISION_LOG;
+        private Sunny.UI.UISymbolButton BTN_3D_VISION_LOG_DATA_CLEAR;
     }
 }
 

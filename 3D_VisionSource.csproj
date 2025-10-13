@@ -61,6 +61,7 @@
   <ItemGroup>
     <Compile Include="Core\FusionEngine.cs" />
     <Compile Include="Core\RoiOverlayForImageBox.cs" />
+    <Compile Include="Logger\InspectionResultsTable.cs" />
     <Compile Include="Logger\UiListBoxLogger.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>

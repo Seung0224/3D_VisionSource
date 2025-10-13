@@ -136,6 +136,9 @@ namespace _3D_VisionSource
                 // Inspect: Mat 기반 오버로드 사용 (경로/Bitmap 재-리드 없음)
                 var res = FusionEngine.Inspect(_intensityMat, zRaw, null, true);
 
+                // 검사 결과 테이블
+                InspectionResultsTable.Bind(GV_3D_VISION_LOG, InspectionResultsTable.ToRows(res));
+
                 // 포인트 클라우드
                 _viewer.LoadPoints(res.Points, res.Colors, 2.0);
 
@@ -295,6 +298,18 @@ namespace _3D_VisionSource
             LB_3D_VISION_LOG.Items.Clear();
         }
 
+        private void BTN_3D_VISION_LOG_DATA_CLEAR_Click(object sender, EventArgs e)
+        {
+            // 데이터소스가 BindingList라면
+            if (GV_3D_VISION_LOG.DataSource is System.ComponentModel.IBindingList bl)
+                bl.Clear();                          // 컬럼 유지 + 행만 삭제
+            else
+            {
+                // 데이터소스가 없거나 Rows를 직접 쓰는 경우
+                GV_3D_VISION_LOG.DataSource = null;   // 바인딩 해제
+                GV_3D_VISION_LOG.Rows.Clear();        // 행 전체 삭제(컬럼은 유지)
+            }
+        }
         /// ImageBox에 파일 경로를 로드/표시(잠금 없이)
         private static void SetImage(ImageBox box, ref Image old, string path)
         {

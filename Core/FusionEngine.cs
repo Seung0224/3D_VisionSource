@@ -308,9 +308,21 @@ namespace _3D_VisionSource
 
                     for (int i = 0; i < compLabels.Count; i++)
                     {
-                        string txt = (compAreaMm2[i] < 1.0) ? compAreaMm2[i].ToString("F3", CultureInfo.InvariantCulture) + "mm" : compAreaMm2[i].ToString("F1", CultureInfo.InvariantCulture) + "mm";
-                        Cv2.PutText(imColor, txt, compCentroidPx[i], HersheyFonts.HersheySimplex, 0.5, new Scalar(0, 0, 0), 2, LineTypes.AntiAlias);
-                        Cv2.PutText(imColor, txt, compCentroidPx[i], HersheyFonts.HersheySimplex, 0.5, new Scalar(0, 255, 255), 1, LineTypes.AntiAlias);
+                        var bb = compBBox[i];
+                        var txt = $"{i + 1}:{FormatArea(compAreaMm2[i])}";
+
+                        // 기본 위치: 박스 오른쪽
+                        int x = bb.Right + 4;
+                        int y = Math.Max(12, Math.Min(imColor.Rows - 4, bb.Top + 12));
+
+                        // 오른쪽 여백 부족하면 박스 아래
+                        if (x > imColor.Cols - 40)
+                        {
+                            x = Math.Max(0, bb.Left);
+                            y = Math.Min(imColor.Rows - 4, bb.Bottom + 12);
+                        }
+
+                        DrawLabelThin(imColor, txt, new OpenCvSharp.Point(x, y), scale: 0.4, thickness: 1);
                     }
 
                     overlayBmp = OpenCvSharp.Extensions.BitmapConverter.ToBitmap(imColor);
@@ -341,7 +353,47 @@ namespace _3D_VisionSource
                 throw;
             }
         }
+        static void DrawLabel(Mat img, string text, OpenCvSharp.Point org, double scale = 0.5, int thickness = 1)
+        {
+            int baseline;
+            var size = Cv2.GetTextSize(text, HersheyFonts.HersheySimplex, scale, thickness, out baseline);
+            var pad = 3;
+            var rect = new OpenCvSharp.Rect(
+                Math.Max(0, org.X),
+                Math.Max(0, org.Y - size.Height - baseline),
+                Math.Min(size.Width + pad * 2, Math.Max(0, img.Cols - org.X)),
+                Math.Min(size.Height + baseline + pad * 2, Math.Max(0, img.Rows - (org.Y - size.Height - baseline)))
+            );
 
+            if (rect.Width > 0 && rect.Height > 0)
+                Cv2.Rectangle(img, rect, new Scalar(0, 0, 0, 0), -1, LineTypes.AntiAlias); // 검정 배경
+
+            // 두 번 그려 외곽선 효과 (검정 → 노랑)
+            Cv2.PutText(img, text, new OpenCvSharp.Point(org.X + pad, org.Y - baseline + pad),
+                HersheyFonts.HersheySimplex, scale, new Scalar(0, 0, 0), thickness + 2, LineTypes.AntiAlias);
+            Cv2.PutText(img, text, new OpenCvSharp.Point(org.X + pad, org.Y - baseline + pad),
+                HersheyFonts.HersheySimplex, scale, new Scalar(0, 255, 255), thickness, LineTypes.AntiAlias);
+        }
+
+        static void DrawLabelThin(Mat img, string text, OpenCvSharp.Point org, double scale = 0.4, int thickness = 1)
+        {
+            // 외곽선
+            Cv2.PutText(img, text, org,
+                HersheyFonts.HersheySimplex, scale, new Scalar(0, 0, 0), thickness + 1, LineTypes.AntiAlias);
+            // 본문(노랑)
+            Cv2.PutText(img, text, org,
+                HersheyFonts.HersheySimplex, scale, new Scalar(0, 255, 255), thickness, LineTypes.AntiAlias);
+        }
+
+        // (선택) 면적 표기 포맷
+        static string FormatArea(double a)
+        {
+            var inv = System.Globalization.CultureInfo.InvariantCulture;
+            if (a < 1e-3) return (a * 1e6).ToString("F0", inv) + " µm^2";
+            if (a < 1) return a.ToString("F3", inv) + " mm^2";
+            if (a < 10) return a.ToString("F2", inv) + " mm^2";
+            return a.ToString("F1", inv) + " mm^2";
+        }
         /// 2D 컨투어를 3D 라인 루프로 변환
         public static List<Point3D[]> Make3DContourLoops(InspectionResults res, float[,] zRaw, int neighbor = 2)
         {
