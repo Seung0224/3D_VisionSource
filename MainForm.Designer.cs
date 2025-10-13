@@ -51,6 +51,7 @@
             this.IntensityPanelUI = new Sunny.UI.UIPanel();
             this.IntensityImageBox = new Cyotek.Windows.Forms.ImageBox();
             this.LB_3D_VISION_LOG = new Sunny.UI.UIListBox();
+            this.BTN_3D_VISION_LOG_CLEAR = new Sunny.UI.UISymbolButton();
             this.MainUITLP.SuspendLayout();
             this.ButtonUITLP.SuspendLayout();
             this.uiTableLayoutPanel1.SuspendLayout();
@@ -151,6 +152,7 @@
             this.ButtonUITLP.AutoSize = true;
             this.ButtonUITLP.ColumnCount = 1;
             this.ButtonUITLP.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.ButtonUITLP.Controls.Add(this.BTN_3D_VISION_LOG_CLEAR, 0, 6);
             this.ButtonUITLP.Controls.Add(this.BTN_SHOW_ROI, 0, 2);
             this.ButtonUITLP.Controls.Add(this.BTN_SET_ROI, 0, 3);
             this.ButtonUITLP.Controls.Add(this.uiTableLayoutPanel1, 0, 1);
@@ -160,15 +162,16 @@
             this.ButtonUITLP.Location = new System.Drawing.Point(1076, 40);
             this.ButtonUITLP.Margin = new System.Windows.Forms.Padding(0, 0, 2, 0);
             this.ButtonUITLP.Name = "ButtonUITLP";
-            this.ButtonUITLP.RowCount = 7;
+            this.ButtonUITLP.RowCount = 8;
             this.ButtonUITLP.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
             this.ButtonUITLP.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
             this.ButtonUITLP.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
             this.ButtonUITLP.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
             this.ButtonUITLP.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
             this.ButtonUITLP.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 250F));
+            this.ButtonUITLP.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
             this.ButtonUITLP.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 250F));
-            this.ButtonUITLP.Size = new System.Drawing.Size(344, 700);
+            this.ButtonUITLP.Size = new System.Drawing.Size(344, 725);
             this.ButtonUITLP.TabIndex = 0;
             this.ButtonUITLP.TagString = null;
             // 
@@ -385,7 +388,7 @@
             // LB_3D_VISION_LOG
             // 
             this.LB_3D_VISION_LOG.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.LB_3D_VISION_LOG.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.LB_3D_VISION_LOG.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.LB_3D_VISION_LOG.HoverColor = System.Drawing.Color.FromArgb(((int)(((byte)(155)))), ((int)(((byte)(200)))), ((int)(((byte)(255)))));
             this.LB_3D_VISION_LOG.ItemSelectForeColor = System.Drawing.Color.White;
             this.LB_3D_VISION_LOG.Location = new System.Drawing.Point(4, 205);
@@ -396,6 +399,24 @@
             this.LB_3D_VISION_LOG.ShowText = false;
             this.LB_3D_VISION_LOG.Size = new System.Drawing.Size(336, 240);
             this.LB_3D_VISION_LOG.TabIndex = 15;
+            // 
+            // BTN_3D_VISION_LOG_CLEAR
+            // 
+            this.BTN_3D_VISION_LOG_CLEAR.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.BTN_3D_VISION_LOG_CLEAR.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.BTN_3D_VISION_LOG_CLEAR.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(210)))), ((int)(((byte)(235)))), ((int)(((byte)(255)))));
+            this.BTN_3D_VISION_LOG_CLEAR.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.BTN_3D_VISION_LOG_CLEAR.ForeColor = System.Drawing.Color.Black;
+            this.BTN_3D_VISION_LOG_CLEAR.Location = new System.Drawing.Point(3, 453);
+            this.BTN_3D_VISION_LOG_CLEAR.MinimumSize = new System.Drawing.Size(1, 1);
+            this.BTN_3D_VISION_LOG_CLEAR.Name = "BTN_3D_VISION_LOG_CLEAR";
+            this.BTN_3D_VISION_LOG_CLEAR.Size = new System.Drawing.Size(338, 19);
+            this.BTN_3D_VISION_LOG_CLEAR.Symbol = 557913;
+            this.BTN_3D_VISION_LOG_CLEAR.SymbolColor = System.Drawing.Color.Black;
+            this.BTN_3D_VISION_LOG_CLEAR.TabIndex = 16;
+            this.BTN_3D_VISION_LOG_CLEAR.Text = "Log Clear";
+            this.BTN_3D_VISION_LOG_CLEAR.TipsFont = new System.Drawing.Font("굴림", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.BTN_3D_VISION_LOG_CLEAR.Click += new System.EventHandler(this.BTN_3D_VISION_LOG_CLEAR_Click);
             // 
             // MainForm
             // 
@@ -443,6 +464,7 @@
         private Sunny.UI.UISymbolButton BTN_SET_ROI;
         private Sunny.UI.UISymbolButton BTN_SHOW_ROI;
         private Sunny.UI.UIListBox LB_3D_VISION_LOG;
+        private Sunny.UI.UISymbolButton BTN_3D_VISION_LOG_CLEAR;
     }
 }
 

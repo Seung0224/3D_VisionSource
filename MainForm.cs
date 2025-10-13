@@ -39,6 +39,7 @@ namespace _3D_VisionSource
             Initialize3DViewerUI();
             InitializeImageBoxContextMenu();
             InitializeROI();
+            InitializeLogger();
         }
 
         #region Initialize
@@ -89,6 +90,11 @@ namespace _3D_VisionSource
         private void InitializeROI()
         {
             _roi = new RoiOverlayForImageBox(IntensityImageBox);
+        }
+
+        private void InitializeLogger()
+        {
+            FusionEngine.LogSink = new UiListBoxLogger(LB_3D_VISION_LOG, capacity: 2000);
         }
         #endregion
 
@@ -276,12 +282,17 @@ namespace _3D_VisionSource
 
         private void BTN_SET_ROI_Click(object sender, EventArgs e)
         {
+
         }
 
         private void BTN_SHOW_ROI_Click(object sender, EventArgs e)
         {
             _roi.BtnShowRoi();
+        }
 
+        private void BTN_3D_VISION_LOG_CLEAR_Click(object sender, EventArgs e)
+        {
+            LB_3D_VISION_LOG.Items.Clear();
         }
 
         /// ImageBox에 파일 경로를 로드/표시(잠금 없이)
