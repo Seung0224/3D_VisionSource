@@ -6,7 +6,7 @@ using Cyotek.Windows.Forms;
 
 namespace _3D_VisionSource
 {
-    public sealed class RoiOverlayForImageBox : IDisposable
+    public sealed class RoiForImageBox : IDisposable
     {
         private readonly ImageBox _box;
 
@@ -33,7 +33,7 @@ namespace _3D_VisionSource
         public Color Fill { get; set; } = Color.FromArgb(64, Color.DeepSkyBlue);
         public float StrokeWidth { get; set; } = 2f;
 
-        public RoiOverlayForImageBox(ImageBox imageBox)
+        public RoiForImageBox(ImageBox imageBox)
         {
             if (imageBox == null) throw new ArgumentNullException(nameof(imageBox));
             _box = imageBox;

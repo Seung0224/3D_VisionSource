@@ -1,14 +1,10 @@
 ﻿using OpenCvSharp;
-using SharpDX;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 using System.Globalization;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Media.Media3D;
-using HT = HelixToolkit.Wpf.SharpDX;
 using MediaColor = System.Windows.Media.Color;
 
 namespace _3D_VisionSource
@@ -29,7 +25,7 @@ namespace _3D_VisionSource
         }
 
         #region Public API: Inspect (refactored)
-        public static InspectionResults Inspect(Mat intensityMat, float[,] zRaw, InspectionParams p, System.Drawing.RectangleF? roiRectImg = null, bool draw2DOverlay = true)
+        public static InspectionResults Inspect(Mat intensityMat, float[,] zRaw, InspectionParams p, System.Drawing.RectangleF? roiRectImg = null)
         {
             P = p.Clone();
 
@@ -100,8 +96,9 @@ namespace _3D_VisionSource
                 // 8) 라벨링 + 필터 (MinAreaMm2)
                 // "hole 이미지 안에서 각각의 구멍(덩어리)을 찾아내고, 너무 작은 건 버리고, 남은 구멍들의 위치·크기·중심좌표를 정리하는 함수" 입니다.
                 // 여기 이 함수 내에서 minAreaMm2 변수 값을 통해서 조절함
-                // 이 함수 = “구멍 찾는 카운터 + 줄자” 구멍이 몇 개인지 세고 너무 작은 먼지 구멍은 무시하고 남은 구멍의 크기, 위치, 중심을 기록하는 과정이에요.
-                ComponentResult comps = LabelAndFilterComponents(hole, P.Sx * P.Sy, P.MinAreaMm2);
+                // 이 함수 = “구멍 찾는 카운터 + 줄자” 구멍이 몇 개인지 세고 너무 작은 먼지 구멍은 무시하고 남은 구멍의 크기, 위치, 중심을 기록하는 과정
+                ComponentResult comps = FilterComponents(hole, P.Sx * P.Sy, P.MinAreaMm2);
+
                 lap("cc-label+filter");
 
                 // 최종 hole = keepMask
@@ -111,14 +108,6 @@ namespace _3D_VisionSource
                 // 위에서 찾은 최종 Hole 들에 대해서 외곽선 그리기 위한 함수
                 var contours = FindContoursFromMask(hole);
                 lap("find-contours");
-
-                // 10) 2D 오버레이
-                Bitmap overlayBmp = null;
-                if (draw2DOverlay)
-                {
-                    overlayBmp = RenderOverlay2D(im, hole, contours, comps);
-                    lap("overlay-bitmap");
-                }
 
                 Log("Inspect done. total {0} ms", sw.ElapsedMilliseconds);
                 #endregion
@@ -136,7 +125,6 @@ namespace _3D_VisionSource
                     CompAreaMm2 = comps.AreaMm2,
                     CompBBox = comps.BBox,
                     CompCentroidPx = comps.CentroidPx,
-                    Overlay2D = overlayBmp
                 };
             }
             catch
@@ -359,13 +347,15 @@ namespace _3D_VisionSource
             public List<OpenCvSharp.Point> CentroidPx;
         }
 
-        private static ComponentResult LabelAndFilterComponents(Mat mask, double pxAreaToMm2, double minAreaMm2)
+        private static ComponentResult FilterComponents(Mat mask, double pxAreaToMm2, double minAreaMm2)
         {
             var labels = new Mat();
             var stats = new Mat();
             var cents = new Mat();
 
-            int n = Cv2.ConnectedComponentsWithStats(mask, labels, stats, cents, PixelConnectivity.Connectivity8, MatType.CV_32S);
+            int n = Cv2.ConnectedComponentsWithStats(
+                mask, labels, stats, cents,
+                PixelConnectivity.Connectivity8, MatType.CV_32S);
 
             var keepMask = new Mat(mask.Rows, mask.Cols, MatType.CV_8UC1, Scalar.All(0));
             var compLabels = new List<int>();
@@ -396,7 +386,8 @@ namespace _3D_VisionSource
                 compAreaPx.Add(areaPx);
                 compAreaMm2.Add(areaMm2);
                 compBBox.Add(bb);
-                compCentroidPx.Add(new OpenCvSharp.Point((int)Math.Round(cxPx), (int)Math.Round(cyPx)));
+                compCentroidPx.Add(new OpenCvSharp.Point(
+                    (int)Math.Round(cxPx), (int)Math.Round(cyPx)));
             }
 
             labels.Dispose(); stats.Dispose(); cents.Dispose();
@@ -420,53 +411,6 @@ namespace _3D_VisionSource
             return contours;
         }
 
-        private static Bitmap RenderOverlay2D(Mat im, Mat holeMask, List<OpenCvSharp.Point[]> contours, ComponentResult comps)
-        {
-            Mat imColor;
-            {
-                Mat base8;
-                if (im.Type() != MatType.CV_8UC1 && im.Type() != MatType.CV_8UC3 && im.Type() != MatType.CV_8UC4)
-                {
-                    double scale = (im.Type() == MatType.CV_16UC1) ? 1.0 / 256.0 : 1.0;
-                    base8 = new Mat();
-                    im.ConvertTo(base8, MatType.CV_8U, scale);
-                }
-                else base8 = im;
-
-                if (base8.Channels() == 1) Cv2.CvtColor(base8, imColor = new Mat(), ColorConversionCodes.GRAY2BGR);
-                else if (base8.Channels() == 4) Cv2.CvtColor(base8, imColor = new Mat(), ColorConversionCodes.BGRA2BGR);
-                else imColor = base8.Clone();
-            }
-
-            using (var fill = new Mat(imColor.Size(), imColor.Type(), new Scalar(0, 0, 255)))
-            using (var blended = new Mat())
-            {
-                Cv2.AddWeighted(imColor, 1.0, fill, P.OverlayAlpha, 0, blended);
-                blended.CopyTo(imColor, holeMask);
-            }
-
-            foreach (var c in contours)
-                Cv2.Polylines(imColor, new[] { c }, true, new Scalar(0, 255, 255), 2);
-
-            for (int i = 0; i < comps.Labels.Count; i++)
-            {
-                var bb = comps.BBox[i];
-                var txt = $"{i + 1}:{FormatArea(comps.AreaMm2[i])}";
-
-                int x = bb.Right + 4;
-                int y = Math.Max(12, Math.Min(imColor.Rows - 4, bb.Top + 12));
-
-                if (x > imColor.Cols - 40)
-                {
-                    x = Math.Max(0, bb.Left);
-                    y = Math.Min(imColor.Rows - 4, bb.Bottom + 12);
-                }
-
-                DrawLabelThin(imColor, txt, new OpenCvSharp.Point(x, y), scale: 0.4, thickness: 1);
-            }
-
-            return OpenCvSharp.Extensions.BitmapConverter.ToBitmap(imColor);
-        }
         #endregion
 
         #region ROI Builders
@@ -522,23 +466,6 @@ namespace _3D_VisionSource
                 Cv2.DrawContours(roiAuto, new[] { cnts[best] }, -1, Scalar.All(255), -1);
             }
             return roiAuto;
-        }
-        #endregion
-
-        #region Helpers
-        static void DrawLabelThin(Mat img, string text, OpenCvSharp.Point org, double scale = 0.4, int thickness = 1)
-        {
-            Cv2.PutText(img, text, org, HersheyFonts.HersheySimplex, scale, new Scalar(0, 0, 0), thickness + 1, LineTypes.AntiAlias);
-            Cv2.PutText(img, text, org, HersheyFonts.HersheySimplex, scale, new Scalar(0, 255, 255), thickness, LineTypes.AntiAlias);
-        }
-
-        static string FormatArea(double a)
-        {
-            var inv = CultureInfo.InvariantCulture;
-            if (a < 1e-3) return (a * 1e6).ToString("F0", inv) + " µm^2";
-            if (a < 1) return a.ToString("F3", inv) + " mm^2";
-            if (a < 10) return a.ToString("F2", inv) + " mm^2";
-            return a.ToString("F1", inv) + " mm^2";
         }
         #endregion
 

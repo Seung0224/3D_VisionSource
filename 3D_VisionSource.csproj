@@ -62,7 +62,7 @@
     <Compile Include="Core\FusionData.cs" />
     <Compile Include="Core\FusionEngine.cs" />
     <Compile Include="Core\FusionOverlay.cs" />
-    <Compile Include="Core\RoiOverlayForImageBox.cs" />
+    <Compile Include="Core\RoiForImageBox.cs" />
     <Compile Include="Helper\InlineNumberEdit.cs" />
     <Compile Include="Logger\InspectionResultsTable.cs" />
     <Compile Include="Logger\UiListBoxLogger.cs" />

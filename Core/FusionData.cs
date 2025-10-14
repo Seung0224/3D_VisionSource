@@ -36,6 +36,5 @@ namespace _3D_VisionSource
         public List<double> CompAreaMm2;
         public List<OpenCvSharp.Rect> CompBBox;
         public List<OpenCvSharp.Point> CompCentroidPx;
-        public Bitmap Overlay2D;
     }
 }

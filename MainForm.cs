@@ -27,7 +27,7 @@ namespace _3D_VisionSource
         private readonly UIContextMenuStrip _imageMenu = new UIContextMenuStrip();
         private ToolStripMenuItem _miFit = new ToolStripMenuItem(), _miSave = new ToolStripMenuItem();
 
-        private RoiOverlayForImageBox _roi;
+        private RoiForImageBox _roi;
         #endregion
 
         /// 폼 및 UI 초기화(생성자)
@@ -88,7 +88,7 @@ namespace _3D_VisionSource
 
         private void InitializeROI()
         {
-            _roi = new RoiOverlayForImageBox(IntensityImageBox);
+            _roi = new RoiForImageBox(IntensityImageBox);
         }
 
         private void InitializeLogger()
@@ -144,14 +144,17 @@ namespace _3D_VisionSource
                     MinPxKernel = UP_MinpxKernel.Text.ToInt(),
                 };
 
-                // 1) Inspect 실행 (Mat 기반)
+                // Inspect
                 var res = FusionEngine.Inspect(_intensityMat, zRaw, p, roiRectImg: roiRect);
 
-                // 2) 결과 테이블 바인딩
+                // 테이블 바인딩(그대로)
                 InspectionResultsTable.Bind(GV_3D_VISION_LOG, InspectionResultsTable.ToRows(res));
 
-                // 3) Overlay 표시
-                FusionOverlay.Render(res, _zRawCache, _viewer, TWODImageBox, p, Viewer3DControl.ViewPreset.Front);
+                // 2D+3D 한 번에
+                FusionOverlay.Render(res: res, 
+                                     intensityMat: _intensityMat, zRaw: zRaw,
+                                     imageBox: TWODImageBox, viewer: _viewer, p: p, 
+                                     preset: Viewer3DControl.ViewPreset.Front);
             }
             catch (Exception ex)
             {
