@@ -95,12 +95,14 @@ namespace _3D_VisionSource
         {
             FusionEngine.LogSink = new UiListBoxLogger(LB_3D_VISION_LOG, capacity: 2000);
         }
+
         #endregion
 
         #region Buttons
         /// 이미지 오픈(유형 무관 선택 + 자동 매칭)
         private void BTN_IMAGE_OPEN_Click(object sender, EventArgs e) { SelectAndResolve(true); }
         // Fusion 수행: 포인트클라우드 생성, 홀검출, 2D/3D 오버레이 표시
+        // MainForm.cs (버튼 핸들러)
         private void BTN_IMAGE_FUSION_Click(object sender, EventArgs e)
         {
             try
@@ -116,7 +118,7 @@ namespace _3D_VisionSource
                     return;
                 }
 
-                // Z 변환: 캐시가 없으면 포맷에 맞춰 1회 변환
+                // Z 변환 캐시
                 var zRaw = _zRawCache;
                 if (zRaw == null)
                 {
@@ -124,8 +126,7 @@ namespace _3D_VisionSource
                         zRaw = FusionEngine.LoadZ16(_zmapMat);
                     else
                         throw new NotSupportedException($"지원하지 않는 Z 포맷: {_zmapMat.Type()}");
-
-                    _zRawCache = zRaw; // 캐시
+                    _zRawCache = zRaw;
                 }
 
                 var roiRect = _roi.GetRoiImageRect();
@@ -143,38 +144,22 @@ namespace _3D_VisionSource
                     MinPxKernel = UP_MinpxKernel.Text.ToInt(),
                 };
 
-                // Inspect: Mat 기반 오버로드 사용 (경로/Bitmap 재-리드 없음)
+                // 1) Inspect 실행 (Mat 기반)
                 var res = FusionEngine.Inspect(_intensityMat, zRaw, p, roiRectImg: roiRect);
 
-                // 검사 결과 테이블
+                // 2) 결과 테이블 바인딩
                 InspectionResultsTable.Bind(GV_3D_VISION_LOG, InspectionResultsTable.ToRows(res));
 
-                // 포인트 클라우드
-                _viewer.LoadPoints(res.Points, res.Colors, 2.0);
-
-                // 2D 오버레이
-                if (res.Overlay2D != null)
-                {
-                    TWODImageBox.Image = res.Overlay2D;
-                    TWODImageBox.ZoomToFit();
-                }
-
-                // 3D 오버레이: 채움 메쉬 우선, 없으면 라인 루프
-                var meshes = FusionEngine.Make3DFilledMeshes(res, zRaw, 2, 1.5);
-                if (meshes != null && meshes.Length > 0)
-                    _viewer.OverlayFillMeshes(meshes, System.Windows.Media.Colors.Red, 0.35f);
-                else
-                {
-                    var loops = FusionEngine.Make3DContourLoops(res, zRaw, 2);
-                    if (loops != null && loops.Count > 0)
-                        _viewer.OverlayLineLoops(loops.ToArray(), System.Windows.Media.Colors.Red, 2.0f);
-                }
+                // 3) Overlay 표시
+                FusionOverlay.Render(res, _zRawCache, _viewer, TWODImageBox, p, Viewer3DControl.ViewPreset.Front);
             }
             catch (Exception ex)
             {
                 UIMessageBox.ShowError("Fusion 실패\n" + ex.Message);
             }
         }
+
+
 
 
         /// Intensity 전용 선택

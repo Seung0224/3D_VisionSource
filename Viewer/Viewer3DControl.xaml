@@ -11,11 +11,11 @@
             <!-- 카메라 -->
             <dx:Viewport3DX.Camera>
                 <dx:PerspectiveCamera Position="0,-200,150"
-                              LookDirection="0,200,-150"
+                              LookDirection="0,200,0"
                               UpDirection="0,0,1"
                               FieldOfView="45" />
             </dx:Viewport3DX.Camera>
-
+            
             <!-- 조명 (포인트는 조명 영향 거의 없음, 있어도 무방) -->
             <dx:DirectionalLight3D Direction="-0.3,-0.3,-1" Color="White" />
             <dx:AmbientLight3D     Color="#FF606060" />
