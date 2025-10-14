@@ -135,7 +135,7 @@
             this.THREEDPanelUI.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(249)))), ((int)(((byte)(255)))));
             this.THREEDPanelUI.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.THREEDPanelUI.Location = new System.Drawing.Point(1183, 5);
-            this.THREEDPanelUI.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.THREEDPanelUI.Margin = new System.Windows.Forms.Padding(3, 3, 3, 3);
             this.THREEDPanelUI.MinimumSize = new System.Drawing.Size(1, 1);
             this.THREEDPanelUI.Name = "THREEDPanelUI";
             this.THREEDPanelUI.Size = new System.Drawing.Size(385, 30);
@@ -149,7 +149,7 @@
             this.TWODPanelUI.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(249)))), ((int)(((byte)(255)))));
             this.TWODPanelUI.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.TWODPanelUI.Location = new System.Drawing.Point(790, 5);
-            this.TWODPanelUI.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.TWODPanelUI.Margin = new System.Windows.Forms.Padding(3, 3, 3, 3);
             this.TWODPanelUI.MinimumSize = new System.Drawing.Size(1, 1);
             this.TWODPanelUI.Name = "TWODPanelUI";
             this.TWODPanelUI.Size = new System.Drawing.Size(385, 30);
@@ -163,7 +163,7 @@
             this.ZMapPanelUI.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(249)))), ((int)(((byte)(255)))));
             this.ZMapPanelUI.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.ZMapPanelUI.Location = new System.Drawing.Point(397, 5);
-            this.ZMapPanelUI.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.ZMapPanelUI.Margin = new System.Windows.Forms.Padding(3, 3, 3, 3);
             this.ZMapPanelUI.MinimumSize = new System.Drawing.Size(1, 1);
             this.ZMapPanelUI.Name = "ZMapPanelUI";
             this.ZMapPanelUI.Size = new System.Drawing.Size(385, 30);
@@ -728,7 +728,7 @@
             this.IntensityPanelUI.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(249)))), ((int)(((byte)(255)))));
             this.IntensityPanelUI.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.IntensityPanelUI.Location = new System.Drawing.Point(4, 5);
-            this.IntensityPanelUI.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.IntensityPanelUI.Margin = new System.Windows.Forms.Padding(3, 3, 3, 3);
             this.IntensityPanelUI.MinimumSize = new System.Drawing.Size(1, 1);
             this.IntensityPanelUI.Name = "IntensityPanelUI";
             this.IntensityPanelUI.Size = new System.Drawing.Size(385, 30);
