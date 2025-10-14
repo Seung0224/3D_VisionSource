@@ -1,11 +1,9 @@
-﻿// FusionOverlay.cs  — 2D/3D Overlay 전담 (그리기 담당), 엔진은 계산만 수행
-using _3D_VisionSource.Viewer;
-using Cyotek.Windows.Forms;
-using HelixToolkit.Wpf.SharpDX;
+﻿using System;
 using OpenCvSharp;
-using System;
-using System.Collections.Generic;
 using System.Drawing;
+using Cyotek.Windows.Forms;
+using _3D_VisionSource.Viewer;
+using System.Collections.Generic;
 using HT = HelixToolkit.Wpf.SharpDX;
 using Media3D = System.Windows.Media.Media3D;
 
@@ -19,18 +17,10 @@ namespace _3D_VisionSource
         private const double POINT_SIZE = 3.0;            // 포인트 사이즈
         private const float MESH_OPACITY = 0.35f;         // 메시 불투명도
         private static readonly System.Windows.Media.Color MESH_COLOR = System.Windows.Media.Colors.Red;
-
         /// <summary>
         /// 한 번 호출로 2D/3D 모두 렌더. (2D는 intensityMat 기반으로 즉석 생성)
         /// </summary>
-        public static void Render(
-            InspectionResults res,
-            float[,] zRaw,
-            Viewer3DControl viewer,
-            ImageBox imageBox,
-            InspectionParams p,
-            Mat intensityMat,
-            Viewer3DControl.ViewPreset preset = Viewer3DControl.ViewPreset.Front)
+        public static void Render(InspectionResults res, float[,] zRaw, Viewer3DControl viewer, ImageBox imageBox, InspectionParams p, Mat intensityMat, Viewer3DControl.ViewPreset preset = Viewer3DControl.ViewPreset.Front)
         {
             if (res == null) return;
 
@@ -65,7 +55,6 @@ namespace _3D_VisionSource
                 viewer?.ClearScene();
             }
         }
-
         // ===================== 2D =====================
         public static void Apply2D(ImageBox box, Bitmap overlay2D)
         {
@@ -73,7 +62,6 @@ namespace _3D_VisionSource
             box.Image = overlay2D;
             if (overlay2D != null) box.ZoomToFit();
         }
-
         /// <summary>
         /// Intensity Mat과 Inspect 결과(마스크/컨투어/컴포넌트)를 이용해 Overlay 비트맵 생성
         /// </summary>
@@ -140,14 +128,12 @@ namespace _3D_VisionSource
 
             return OpenCvSharp.Extensions.BitmapConverter.ToBitmap(imColor);
         }
-
         private static void PutLabelThin(Mat img, string text, OpenCvSharp.Point org, double scale, int thickness)
         {
             // 외곽선(검정) + 본색(노랑)
             Cv2.PutText(img, text, org, HersheyFonts.HersheySimplex, scale, new Scalar(0, 0, 0), thickness + 1, LineTypes.AntiAlias);
             Cv2.PutText(img, text, org, HersheyFonts.HersheySimplex, scale, new Scalar(0, 255, 255), thickness, LineTypes.AntiAlias);
         }
-
         private static string FormatAreaLabel(int idx, double areaMm2)
         {
             if (areaMm2 < 1e-3) return $"{idx}:{(areaMm2 * 1e6):F0} µm^2";
@@ -155,17 +141,8 @@ namespace _3D_VisionSource
             if (areaMm2 < 10) return $"{idx}:{areaMm2:F2} mm^2";
             return $"{idx}:{areaMm2:F1} mm^2";
         }
-
         // ===================== 3D =====================
-        public static void Render3D(
-            Viewer3DControl viewer,
-            Media3D.Point3D[] pts,
-            System.Windows.Media.Color[] cols,
-            HT.MeshGeometry3D[] meshes,
-            Viewer3DControl.ViewPreset preset,
-            double pointSize,
-            System.Windows.Media.Color meshColor,
-            float meshOpacity)
+        public static void Render3D(Viewer3DControl viewer, Media3D.Point3D[] pts, System.Windows.Media.Color[] cols, HT.MeshGeometry3D[] meshes, Viewer3DControl.ViewPreset preset, double pointSize, System.Windows.Media.Color meshColor, float meshOpacity)
         {
             if (viewer == null || pts == null || cols == null || pts.Length == 0 || cols.Length != pts.Length)
             {
@@ -183,12 +160,8 @@ namespace _3D_VisionSource
                 meshOpacity: meshOpacity,
                 clearBefore: true);
         }
-
         // ===================== Mesh Builder =====================
-        public static HT.MeshGeometry3D[] Make3DFilledMeshes(
-            InspectionResults res, float[,] zRaw,
-            double sx, double sy, double zScale, double zOffset, bool centerOrigin, float invalidZ,
-            int neighbor, double approxEpsPx)
+        public static HT.MeshGeometry3D[] Make3DFilledMeshes(InspectionResults res, float[,] zRaw, double sx, double sy, double zScale, double zOffset, bool centerOrigin, float invalidZ, int neighbor, double approxEpsPx)
         {
             if (res == null || res.ContoursPx == null || res.ContoursPx.Count == 0 || zRaw == null)
                 return Array.Empty<HT.MeshGeometry3D>();
@@ -229,11 +202,7 @@ namespace _3D_VisionSource
 
             return list.ToArray();
         }
-
-        private static int MapIndex(
-            OpenCvSharp.Point[] poly, int k, Dictionary<int, int> map, HT.Vector3Collection positions,
-            int W, int H, double cx, double cy, float[,] zRaw,
-            double sx, double sy, double zScale, double zOffset, float invalidZ, int neighbor)
+        private static int MapIndex(OpenCvSharp.Point[] poly, int k, Dictionary<int, int> map, HT.Vector3Collection positions, int W, int H, double cx, double cy, float[,] zRaw, double sx, double sy, double zScale, double zOffset, float invalidZ, int neighbor)
         {
             if (map.TryGetValue(k, out int existed)) return existed;
 
@@ -251,9 +220,7 @@ namespace _3D_VisionSource
             map[k] = idx;
             return idx;
         }
-
         private static int ClampInt(int v, int lo, int hi) => (v < lo) ? lo : (v > hi ? hi : v);
-
         // 폴리곤 꼭짓점의 Z가 INVALID일 경우, 주변 이웃(상하좌우+확장)에서 첫 유효 Z를 샘플
         private static double SampleZWithNeighbor(float[,] zRaw, int x, int y, float invalid, int neighbor)
         {
@@ -273,7 +240,6 @@ namespace _3D_VisionSource
             }
             return 0.0; // 끝까지 못 찾으면 0으로
         }
-
         // 단순 폴리곤 삼각분할(ear clipping)
         private static List<int[]> TriangulateSimplePolygon(OpenCvSharp.Point[] poly)
         {
@@ -328,14 +294,12 @@ namespace _3D_VisionSource
             }
             return result;
         }
-
         private static bool PointInTriangle(OpenCvSharp.Point P, OpenCvSharp.Point A, OpenCvSharp.Point B, OpenCvSharp.Point C)
         {
             double s1 = Cross(P, A, B), s2 = Cross(P, B, C), s3 = Cross(P, C, A);
             bool hasNeg = (s1 < 0) || (s2 < 0) || (s3 < 0), hasPos = (s1 > 0) || (s2 > 0) || (s3 > 0);
             return !(hasNeg && hasPos);
         }
-
         private static double Cross(OpenCvSharp.Point p, OpenCvSharp.Point a, OpenCvSharp.Point b)
             => (b.X - a.X) * (double)(p.Y - a.Y) - (b.Y - a.Y) * (double)(p.X - a.X);
     }

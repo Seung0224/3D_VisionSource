@@ -39,7 +39,6 @@ namespace _3D_VisionSource.Viewer
             r = Math.Sqrt(r2);
             if (r < 1e-9) r = 1.0;
         }
-
         private void ReplaceCamera(Media3D.Point3D center, Media3D.Vector3D dir, Media3D.Vector3D up, double distance)
         {
             if (dir.LengthSquared < 1e-12) dir = new Media3D.Vector3D(0, 1, -0.7);
@@ -66,7 +65,6 @@ namespace _3D_VisionSource.Viewer
             Viewport.Camera = cam;
             Viewport.InvalidateRender();
         }
-
         private static void GetPreset(ViewPreset preset, out Media3D.Vector3D dir, out Media3D.Vector3D up)
         {
             switch (preset)
@@ -84,7 +82,6 @@ namespace _3D_VisionSource.Viewer
                     up = new Media3D.Vector3D(0, 0, 1); break;
             }
         }
-
         private void ApplyPresetToPoints(Media3D.Point3D[] pts, ViewPreset preset)
         {
             CalcCenterAndRadius(pts, out var center, out var r);
@@ -186,7 +183,7 @@ namespace _3D_VisionSource.Viewer
         /// <param name="meshColor">Mesh color (default: Red)</param>
         /// <param name="meshOpacity">Mesh opacity (0~1, default: 0.35f)</param>
         /// <param name="clearBefore">True면 기존 아이템 모두 제거</param>
-        public void RenderScene(Media3D.Point3D[] pts, System.Windows.Media.Color[] cols,MeshGeometry3D[] meshes = null,ViewPreset preset = ViewPreset.Front, double pointSize = 3.0, System.Windows.Media.Color? meshColor = null, float meshOpacity = 0.35f, bool clearBefore = true)
+        public void RenderScene(Media3D.Point3D[] pts, System.Windows.Media.Color[] cols, MeshGeometry3D[] meshes = null, ViewPreset preset = ViewPreset.Front, double pointSize = 3.0, System.Windows.Media.Color? meshColor = null, float meshOpacity = 0.35f, bool clearBefore = true)
         {
             if (pts == null || cols == null || pts.Length == 0 || cols.Length != pts.Length) return;
 
