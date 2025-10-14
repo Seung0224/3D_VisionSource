@@ -27,9 +27,9 @@ namespace _3D_VisionSource
             Control host,
             string initText,
             Action<string> onCommit,
-            int decimals = 3,
-            double min = 0.000,
-            double max = 10000.000,
+            int decimals = 4,
+            double min = 0.0000,
+            double max = 100.0000,
             Action onCancel = null)
         {
             if (host == null || host.IsDisposed) return;
@@ -61,7 +61,7 @@ namespace _3D_VisionSource
 
             // Sunny.UI 스타일 살짝 맞추기(원하는 대로 조정 가능)
             tb.RectColor = host is UIPanel up ? up.RectColor : System.Drawing.Color.FromArgb(220, 230, 250);
-            tb.FillColor = System.Drawing.Color.White;
+            tb.FillColor = System.Drawing.Color.FromArgb(200, 249, 255);
             tb.Radius = 3;
 
             // 편집키 필터링: 숫자/.-, 백스페이스, 좌우/Del/홈/엔드 허용

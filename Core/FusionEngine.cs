@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Media.Media3D;
 using HT = HelixToolkit.Wpf.SharpDX;
 using MediaColor = System.Windows.Media.Color;
@@ -113,7 +114,7 @@ namespace _3D_VisionSource
 
                 var pts = new Point3D[validCount];
                 var cols = new MediaColor[validCount];
-                ComputePointCloudAndColors(im, zRaw, validMaskBool, H, W, pts, cols, P.Centinal);
+                ComputePointCloudAndColorsFast(im, zRaw, validMaskBool, H, W, pts, cols, P.Centinal);
                 lap("pointcloud+color");
 
                 // 4) ROI 마스크 만들기 (사각 or 자동)
@@ -218,49 +219,126 @@ namespace _3D_VisionSource
                     validCount++;
                 }
         }
-        private static void ComputePointCloudAndColors(Mat im, float[,] zRaw, bool[,] validMaskBool, int H, int W, Point3D[] pts, MediaColor[] cols, bool includeInvalid = false)
+        public static int ComputePointCloudAndColorsFast(Mat im, float[,] zRaw, bool[,] validMask, int H, int W, Point3D[] pts, MediaColor [] cols, bool includeInvalid = false)
         {
+            if (im.Type() != MatType.CV_8UC4)
+                throw new ArgumentException("im must be CV_8UC4 (BGRA). Convert beforehand.");
+
+            // ---- 상수 캐시 & LUT 준비 ----
             double cx = P.CenterOrigin ? W / 2.0 : 0.0;
             double cy = P.CenterOrigin ? H / 2.0 : 0.0;
+            double Sx = P.Sx, Sy = P.Sy, Zs = P.ZScale, Zo = P.ZOffset;
 
-            int k = 0;
+            // x, y LUT (double) — Point3D가 double이라 여기서 만들어두면 덜 계산함
+            var xLut = new double[W];
+            for (int x = 0; x < W; x++) xLut[x] = (x - cx) * Sx;
+            var yLut = new double[H];
+            for (int y = 0; y < H; y++) yLut[y] = -(y - cy) * Sy;
 
-            // --- 4채널(BGRA) ---
-            if (im.Channels() == 4)
+            // ---- 비압축 경로 (includeInvalid == true) ----
+            if (includeInvalid)
             {
-                var idx4 = im.GetGenericIndexer<Vec4b>();
-                for (int y = 0; y < H; y++)
+                int total = H * W;
+
+                unsafe
                 {
+                    byte* basePtr = (byte*)im.Data;
+                    long step = im.Step();
+
+                    Parallel.For(0, H, y =>
+                    {
+                        byte* rowPtr = basePtr + y * step;
+                        int rowBase = y * W;
+                        double Y = yLut[y];
+
+                        for (int x = 0; x < W; x++)
+                        {
+                            int i = rowBase + x;
+
+                            // BGRA 읽기
+                            int off = x << 2; // x*4
+                            byte B = rowPtr[off + 0];
+                            byte G = rowPtr[off + 1];
+                            byte R = rowPtr[off + 2];
+                            // byte A = rowPtr[off + 3]; // 사용 안함
+
+                            // 좌표/색
+                            double X = xLut[x];
+                            double Z = Zo + Zs * zRaw[y, x];
+
+                            pts[i] = new Point3D(X, Y, Z);
+                            // invalid도 검정으로 만들고 싶으면 validMask로 분기 가능
+                            cols[i] = validMask[y, x] ? MediaColor.FromArgb(255, R, G, B) : MediaColor.FromArgb(255, (byte)0, (byte)0, (byte)0);
+                        }
+                    });
+                }
+
+                return total;
+            }
+
+            // ---- 압축 경로 (includeInvalid == false) ----
+            // 1) 행별 유효 개수 카운트
+            var rowCounts = new int[H];
+            int totalValid = 0;
+            for (int y = 0; y < H; y++)
+            {
+                int c = 0;
+                for (int x = 0; x < W; x++)
+                    if (validMask[y, x]) c++;
+                rowCounts[y] = c;
+                totalValid += c;
+            }
+
+            // 2) prefix sum → 행 오프셋 계산
+            var rowOffsets = new int[H];
+            int acc = 0;
+            for (int y = 0; y < H; y++)
+            {
+                rowOffsets[y] = acc;
+                acc += rowCounts[y];
+            }
+
+            // pts/cols 길이 체크(부족하면 예외 or 필요한 만큼만 쓴다고 가정)
+            // if (pts.Length < totalValid || cols.Length < totalValid) throw new ArgumentException("pts/cols too small");
+
+            // 3) 병렬로 각 행을 자신의 구간에 race-free 채우기
+            unsafe
+            {
+                byte* basePtr = (byte*)im.Data;
+                long step = im.Step();
+
+                Parallel.For(0, H, y =>
+                {
+                    int baseIndex = rowOffsets[y];
+                    int local = 0;
+
+                    byte* rowPtr = basePtr + y * step;
+                    double Y = yLut[y];
+
                     for (int x = 0; x < W; x++)
                     {
-                        bool ok = validMaskBool[y, x];
+                        if (!validMask[y, x]) continue;
 
-                        // 좌표 변환(무효 포함 모드여도 동일 변환)
-                        double X = (x - cx) * P.Sx;
-                        double Y = -(y - cy) * P.Sy;
-                        double Z = P.ZOffset + P.ZScale * zRaw[y, x];
+                        int i = baseIndex + local;
 
-                        if (!ok && !includeInvalid) continue;  // 기본: 무효는 건너뜀
+                        int off = x << 2;
+                        byte B = rowPtr[off + 0];
+                        byte G = rowPtr[off + 1];
+                        byte R = rowPtr[off + 2];
 
-                        pts[k] = new Point3D(X, Y, Z);
+                        double X = xLut[x];
+                        double Z = Zo + Zs * zRaw[y, x];
 
-                        var bgra = idx4[y, x]; // B,G,R,A
-                        if (ok)
-                        {
-                            cols[k] = MediaColor.FromArgb(255, bgra.Item2, bgra.Item1, bgra.Item0); // R,G,B
-                        }
-                        else
-                        {
-                            cols[k] = MediaColor.FromRgb(0, 0, 0);
-                        }
-                        k++;
+                        pts[i] = new Point3D(X, Y, Z);
+                        cols[i] = MediaColor.FromArgb(255, R, G, B);
+
+                        local++;
                     }
-                }
-                return;
+                });
             }
+
+            return totalValid;
         }
-
-
         private static Mat BuildRoiMask(System.Drawing.RectangleF? roiRectImg, float[,] zRaw, int H, int W)
         {
             if (roiRectImg.HasValue)
