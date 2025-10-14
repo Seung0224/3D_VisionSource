@@ -41,6 +41,11 @@
             this.TWODPanelUI = new Sunny.UI.UIPanel();
             this.ZMapPanelUI = new Sunny.UI.UIPanel();
             this.ButtonUITLP = new Sunny.UI.UITableLayoutPanel();
+            this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
+            this.UP_MinpxKernel = new Sunny.UI.UIPanel();
+            this.uiPanel8 = new Sunny.UI.UIPanel();
+            this.uiPanel20 = new Sunny.UI.UIPanel();
+            this.UP_Minpixel = new Sunny.UI.UISwitch();
             this.BTN_3D_VISION_LOG_DATA_CLEAR = new Sunny.UI.UISymbolButton();
             this.BTN_3D_VISION_LOG_CLEAR = new Sunny.UI.UISymbolButton();
             this.BTN_SHOW_ROI = new Sunny.UI.UISymbolButton();
@@ -74,19 +79,14 @@
             this.BTN_IMAGE_OPEN = new Sunny.UI.UISymbolButton();
             this.IntensityPanelUI = new Sunny.UI.UIPanel();
             this.IntensityImageBox = new Cyotek.Windows.Forms.ImageBox();
-            this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
-            this.uiPanel20 = new Sunny.UI.UIPanel();
-            this.UP_Minpixel = new Sunny.UI.UISwitch();
-            this.uiPanel8 = new Sunny.UI.UIPanel();
-            this.UP_MinpxKernel = new Sunny.UI.UIPanel();
             this.MainUITLP.SuspendLayout();
             this.ButtonUITLP.SuspendLayout();
+            this.tableLayoutPanel2.SuspendLayout();
             this.uiTableLayoutPanel1.SuspendLayout();
             this.TLP_INTENSITY.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.GV_3D_VISION_LOG)).BeginInit();
             this.tableLayoutPanel1.SuspendLayout();
             this.MainUIPanel.SuspendLayout();
-            this.tableLayoutPanel2.SuspendLayout();
             this.SuspendLayout();
             // 
             // MainUITLP
@@ -140,10 +140,11 @@
             this.THREEDPanelUI.Dock = System.Windows.Forms.DockStyle.Fill;
             this.THREEDPanelUI.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(249)))), ((int)(((byte)(255)))));
             this.THREEDPanelUI.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.THREEDPanelUI.Location = new System.Drawing.Point(1182, 3);
+            this.THREEDPanelUI.Location = new System.Drawing.Point(1183, 5);
+            this.THREEDPanelUI.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.THREEDPanelUI.MinimumSize = new System.Drawing.Size(1, 1);
             this.THREEDPanelUI.Name = "THREEDPanelUI";
-            this.THREEDPanelUI.Size = new System.Drawing.Size(387, 34);
+            this.THREEDPanelUI.Size = new System.Drawing.Size(385, 30);
             this.THREEDPanelUI.TabIndex = 11;
             this.THREEDPanelUI.Text = "3D";
             this.THREEDPanelUI.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
@@ -153,10 +154,11 @@
             this.TWODPanelUI.Dock = System.Windows.Forms.DockStyle.Fill;
             this.TWODPanelUI.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(249)))), ((int)(((byte)(255)))));
             this.TWODPanelUI.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.TWODPanelUI.Location = new System.Drawing.Point(789, 3);
+            this.TWODPanelUI.Location = new System.Drawing.Point(790, 5);
+            this.TWODPanelUI.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.TWODPanelUI.MinimumSize = new System.Drawing.Size(1, 1);
             this.TWODPanelUI.Name = "TWODPanelUI";
-            this.TWODPanelUI.Size = new System.Drawing.Size(387, 34);
+            this.TWODPanelUI.Size = new System.Drawing.Size(385, 30);
             this.TWODPanelUI.TabIndex = 10;
             this.TWODPanelUI.Text = "2D";
             this.TWODPanelUI.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
@@ -166,10 +168,11 @@
             this.ZMapPanelUI.Dock = System.Windows.Forms.DockStyle.Fill;
             this.ZMapPanelUI.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(249)))), ((int)(((byte)(255)))));
             this.ZMapPanelUI.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.ZMapPanelUI.Location = new System.Drawing.Point(396, 3);
+            this.ZMapPanelUI.Location = new System.Drawing.Point(397, 5);
+            this.ZMapPanelUI.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.ZMapPanelUI.MinimumSize = new System.Drawing.Size(1, 1);
             this.ZMapPanelUI.Name = "ZMapPanelUI";
-            this.ZMapPanelUI.Size = new System.Drawing.Size(387, 34);
+            this.ZMapPanelUI.Size = new System.Drawing.Size(385, 30);
             this.ZMapPanelUI.TabIndex = 9;
             this.ZMapPanelUI.Text = "Z-Map";
             this.ZMapPanelUI.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
@@ -208,6 +211,86 @@
             this.ButtonUITLP.Size = new System.Drawing.Size(344, 910);
             this.ButtonUITLP.TabIndex = 0;
             this.ButtonUITLP.TagString = null;
+            // 
+            // tableLayoutPanel2
+            // 
+            this.tableLayoutPanel2.ColumnCount = 7;
+            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 14.28571F));
+            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 14.28571F));
+            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 14.28571F));
+            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 14.28571F));
+            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 14.28571F));
+            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 14.28571F));
+            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 14.28571F));
+            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel2.Controls.Add(this.UP_MinpxKernel, 0, 1);
+            this.tableLayoutPanel2.Controls.Add(this.uiPanel8, 1, 0);
+            this.tableLayoutPanel2.Controls.Add(this.uiPanel20, 0, 0);
+            this.tableLayoutPanel2.Controls.Add(this.UP_Minpixel, 0, 1);
+            this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel2.Location = new System.Drawing.Point(3, 243);
+            this.tableLayoutPanel2.Name = "tableLayoutPanel2";
+            this.tableLayoutPanel2.RowCount = 2;
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel2.Size = new System.Drawing.Size(338, 74);
+            this.tableLayoutPanel2.TabIndex = 20;
+            // 
+            // UP_MinpxKernel
+            // 
+            this.UP_MinpxKernel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.UP_MinpxKernel.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(189)))), ((int)(((byte)(255)))));
+            this.UP_MinpxKernel.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.UP_MinpxKernel.Location = new System.Drawing.Point(49, 38);
+            this.UP_MinpxKernel.Margin = new System.Windows.Forms.Padding(1);
+            this.UP_MinpxKernel.MinimumSize = new System.Drawing.Size(1, 1);
+            this.UP_MinpxKernel.Name = "UP_MinpxKernel";
+            this.UP_MinpxKernel.Size = new System.Drawing.Size(46, 35);
+            this.UP_MinpxKernel.TabIndex = 14;
+            this.UP_MinpxKernel.Text = "3";
+            this.UP_MinpxKernel.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
+            this.UP_MinpxKernel.Click += new System.EventHandler(this.UP_MinpxKernel_Click);
+            // 
+            // uiPanel8
+            // 
+            this.uiPanel8.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.uiPanel8.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(189)))), ((int)(((byte)(255)))));
+            this.uiPanel8.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Bold);
+            this.uiPanel8.Location = new System.Drawing.Point(49, 1);
+            this.uiPanel8.Margin = new System.Windows.Forms.Padding(1);
+            this.uiPanel8.MinimumSize = new System.Drawing.Size(1, 1);
+            this.uiPanel8.Name = "uiPanel8";
+            this.uiPanel8.Size = new System.Drawing.Size(46, 35);
+            this.uiPanel8.TabIndex = 8;
+            this.uiPanel8.Text = "Kernel";
+            this.uiPanel8.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // uiPanel20
+            // 
+            this.uiPanel20.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.uiPanel20.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(189)))), ((int)(((byte)(255)))));
+            this.uiPanel20.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.uiPanel20.Location = new System.Drawing.Point(1, 1);
+            this.uiPanel20.Margin = new System.Windows.Forms.Padding(1);
+            this.uiPanel20.MinimumSize = new System.Drawing.Size(1, 1);
+            this.uiPanel20.Name = "uiPanel20";
+            this.uiPanel20.Size = new System.Drawing.Size(46, 35);
+            this.uiPanel20.TabIndex = 0;
+            this.uiPanel20.Text = "MinPx";
+            this.uiPanel20.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // UP_Minpixel
+            // 
+            this.UP_Minpixel.Active = true;
+            this.UP_Minpixel.ActiveText = "";
+            this.UP_Minpixel.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.UP_Minpixel.InActiveText = "";
+            this.UP_Minpixel.Location = new System.Drawing.Point(3, 40);
+            this.UP_Minpixel.MinimumSize = new System.Drawing.Size(1, 1);
+            this.UP_Minpixel.Name = "UP_Minpixel";
+            this.UP_Minpixel.Size = new System.Drawing.Size(42, 29);
+            this.UP_Minpixel.TabIndex = 7;
             // 
             // BTN_3D_VISION_LOG_DATA_CLEAR
             // 
@@ -732,10 +815,11 @@
             this.IntensityPanelUI.Dock = System.Windows.Forms.DockStyle.Fill;
             this.IntensityPanelUI.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(249)))), ((int)(((byte)(255)))));
             this.IntensityPanelUI.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.IntensityPanelUI.Location = new System.Drawing.Point(3, 3);
+            this.IntensityPanelUI.Location = new System.Drawing.Point(4, 5);
+            this.IntensityPanelUI.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.IntensityPanelUI.MinimumSize = new System.Drawing.Size(1, 1);
             this.IntensityPanelUI.Name = "IntensityPanelUI";
-            this.IntensityPanelUI.Size = new System.Drawing.Size(387, 34);
+            this.IntensityPanelUI.Size = new System.Drawing.Size(385, 30);
             this.IntensityPanelUI.TabIndex = 8;
             this.IntensityPanelUI.Text = "Intensity";
             this.IntensityPanelUI.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
@@ -748,86 +832,6 @@
             this.IntensityImageBox.Name = "IntensityImageBox";
             this.IntensityImageBox.Size = new System.Drawing.Size(387, 999);
             this.IntensityImageBox.TabIndex = 12;
-            // 
-            // tableLayoutPanel2
-            // 
-            this.tableLayoutPanel2.ColumnCount = 7;
-            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 14.28571F));
-            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 14.28571F));
-            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 14.28571F));
-            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 14.28571F));
-            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 14.28571F));
-            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 14.28571F));
-            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 14.28571F));
-            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel2.Controls.Add(this.UP_MinpxKernel, 0, 1);
-            this.tableLayoutPanel2.Controls.Add(this.uiPanel8, 1, 0);
-            this.tableLayoutPanel2.Controls.Add(this.uiPanel20, 0, 0);
-            this.tableLayoutPanel2.Controls.Add(this.UP_Minpixel, 0, 1);
-            this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel2.Location = new System.Drawing.Point(3, 243);
-            this.tableLayoutPanel2.Name = "tableLayoutPanel2";
-            this.tableLayoutPanel2.RowCount = 2;
-            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel2.Size = new System.Drawing.Size(338, 74);
-            this.tableLayoutPanel2.TabIndex = 20;
-            // 
-            // uiPanel20
-            // 
-            this.uiPanel20.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.uiPanel20.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(249)))), ((int)(((byte)(255)))));
-            this.uiPanel20.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.uiPanel20.Location = new System.Drawing.Point(1, 1);
-            this.uiPanel20.Margin = new System.Windows.Forms.Padding(1);
-            this.uiPanel20.MinimumSize = new System.Drawing.Size(1, 1);
-            this.uiPanel20.Name = "uiPanel20";
-            this.uiPanel20.Size = new System.Drawing.Size(46, 35);
-            this.uiPanel20.TabIndex = 0;
-            this.uiPanel20.Text = "MinPx";
-            this.uiPanel20.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // UP_Minpixel
-            // 
-            this.UP_Minpixel.Active = true;
-            this.UP_Minpixel.ActiveText = "";
-            this.UP_Minpixel.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.UP_Minpixel.InActiveText = "";
-            this.UP_Minpixel.Location = new System.Drawing.Point(3, 40);
-            this.UP_Minpixel.MinimumSize = new System.Drawing.Size(1, 1);
-            this.UP_Minpixel.Name = "UP_Minpixel";
-            this.UP_Minpixel.Size = new System.Drawing.Size(42, 29);
-            this.UP_Minpixel.TabIndex = 7;
-            // 
-            // uiPanel8
-            // 
-            this.uiPanel8.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.uiPanel8.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(249)))), ((int)(((byte)(255)))));
-            this.uiPanel8.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Bold);
-            this.uiPanel8.Location = new System.Drawing.Point(49, 1);
-            this.uiPanel8.Margin = new System.Windows.Forms.Padding(1);
-            this.uiPanel8.MinimumSize = new System.Drawing.Size(1, 1);
-            this.uiPanel8.Name = "uiPanel8";
-            this.uiPanel8.Size = new System.Drawing.Size(46, 35);
-            this.uiPanel8.TabIndex = 8;
-            this.uiPanel8.Text = "PxKernel";
-            this.uiPanel8.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // UP_MinpxKernel
-            // 
-            this.UP_MinpxKernel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.UP_MinpxKernel.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(200)))), ((int)(((byte)(249)))), ((int)(((byte)(255)))));
-            this.UP_MinpxKernel.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.UP_MinpxKernel.Location = new System.Drawing.Point(49, 38);
-            this.UP_MinpxKernel.Margin = new System.Windows.Forms.Padding(1);
-            this.UP_MinpxKernel.MinimumSize = new System.Drawing.Size(1, 1);
-            this.UP_MinpxKernel.Name = "UP_MinpxKernel";
-            this.UP_MinpxKernel.Size = new System.Drawing.Size(46, 35);
-            this.UP_MinpxKernel.TabIndex = 14;
-            this.UP_MinpxKernel.Text = "3";
-            this.UP_MinpxKernel.TextAlignment = System.Drawing.ContentAlignment.MiddleCenter;
-            this.UP_MinpxKernel.Click += new System.EventHandler(this.UP_MinpxKernel_Click);
             // 
             // MainForm
             // 
@@ -845,12 +849,12 @@
             this.MainUITLP.ResumeLayout(false);
             this.MainUITLP.PerformLayout();
             this.ButtonUITLP.ResumeLayout(false);
+            this.tableLayoutPanel2.ResumeLayout(false);
             this.uiTableLayoutPanel1.ResumeLayout(false);
             this.TLP_INTENSITY.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.GV_3D_VISION_LOG)).EndInit();
             this.tableLayoutPanel1.ResumeLayout(false);
             this.MainUIPanel.ResumeLayout(false);
-            this.tableLayoutPanel2.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
