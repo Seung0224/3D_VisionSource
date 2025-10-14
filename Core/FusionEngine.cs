@@ -13,42 +13,9 @@ using MediaColor = System.Windows.Media.Color;
 
 namespace _3D_VisionSource
 {
-    #region Models
-    public class InspectionParams
-    {
-        // public float Sx = 0.0057f;
-        // 계산상 아마 이게 맞을탠데 3D 뷰어에서 보면 너무 작게 나와서 일단 0.025f로 올림 Y에 맞춰서
-        public float Sx = 0f;
-        public float Sy = 0f;
-        public float ZScale = 0f;
-        public float ZOffset = 0f;
-        public byte InvalidZ = 0;
-        public ushort InvalidZ16 = 0;
-        public bool CenterOrigin = true;
-        public double MinAreaMm2 = 0;
-        public double OverlayAlpha = 0;
-        public bool Centinal = false;
-    }
-    public class InspectionResults
-    {
-        public Point3D[] Points;
-        public MediaColor[] Colors;
-        public int Width;
-        public int Height;
-        public Mat HoleMask;
-        public List<OpenCvSharp.Point[]> ContoursPx;
-        public List<int> CompLabels;
-        public List<int> CompAreaPx;
-        public List<double> CompAreaMm2;
-        public List<OpenCvSharp.Rect> CompBBox;
-        public List<OpenCvSharp.Point> CompCentroidPx;
-        public Bitmap Overlay2D;
-    }
-    #endregion
-
     public static class FusionEngine
     {
-        static readonly InspectionParams P = new InspectionParams();
+        static InspectionParams P = new InspectionParams();
 
         public enum ArgbByteIndex : int { B = 0, G = 1, R = 2, A = 3 }
 
@@ -66,15 +33,7 @@ namespace _3D_VisionSource
         #region Public API: Inspect (refactored)
         public static InspectionResults Inspect(Mat intensityMat, float[,] zRaw, InspectionParams p, System.Drawing.RectangleF? roiRectImg = null, bool draw2DOverlay = true)
         {
-            #region Set params
-            P.Sx = p.Sx;
-            P.Sy = p.Sy;
-            P.ZScale = p.ZScale;
-            P.ZOffset = p.ZOffset;
-            P.MinAreaMm2 = p.MinAreaMm2;
-            P.OverlayAlpha = p.OverlayAlpha;
-            P.Centinal = p.Centinal;
-            #endregion
+            P = p.Clone();
 
             var sw = Stopwatch.StartNew();
             long last = 0L;
@@ -101,8 +60,10 @@ namespace _3D_VisionSource
 
                 bool[,] validMaskBool;
                 int validCount;
-                BuildValidMaskBool(zRaw, H, W, out validMaskBool, out validCount, p.Centinal);
-                if (validCount == 0) throw new InvalidOperationException("No valid Z.");
+                BuildValidMaskBool(zRaw, H, W, out validMaskBool, out validCount, P.Centinal);
+                
+                if (!P.Centinal && validCount == 0)
+                    throw new InvalidOperationException("No valid Z.");
                 lap("Valid Z Calc");
 
                 // 3) 포인트클라우드 + 색 생성
@@ -112,8 +73,9 @@ namespace _3D_VisionSource
                 //  - 결과: pts[], cols[]에 유효 포인트가 연속 저장되어 3D 시각화·측정에 사용된다.
                 //  - 배열 참조로 넘겨주기때문에 ref, out이 없어도 pts, cols값을 그대로 InspectionResults로 전달
 
-                var pts = new Point3D[validCount];
-                var cols = new MediaColor[validCount];
+                int totalForArrays = P.Centinal ? (H * W) : validCount;
+                var pts = new Point3D[totalForArrays];
+                var cols = new MediaColor[totalForArrays];
                 ComputePointCloudAndColorsFast(im, zRaw, validMaskBool, H, W, pts, cols, P.Centinal);
                 lap("pointcloud+color");
 
@@ -123,9 +85,8 @@ namespace _3D_VisionSource
 
                 #region Rule-Based 기반 검사 비전 파이프 라인
                 // 5) 유효 Z 8U 마스크
-                // - 전체 Z맵에서 유효한 픽셀값만 뽑아 OpenCV에서 검사를 하기 위해서 변환하는 과정
-                // - 전체 Z맵에서 유효한값이라면 255 아니라면 0으로 데이터를 만듦
-                var valid8u = BuildValidMask8U(zRaw, H, W);
+                // - OpenCV에서 검사를 하기 위해서 유효한 값을 뽑은 MASK를 MAT 형태로 변환하는 과정
+                var valid8u = BoolMaskTo8U(validMaskBool, H, W);
                 lap("valid-mat8u");
 
                 // 6) hole = ROI ∧ ¬valid
@@ -135,7 +96,7 @@ namespace _3D_VisionSource
 
                 // 7) 형태학적 정리
                 // 너무 작은 검출 결과들은 전처리 과정을 통해서 없애버림 (Cognex Blob MinPixel과 같은 개념의 느낌)
-                MorphCleanInPlace(hole, ksize: 3);
+                MorphCleanInPlace(hole, ksize: P.MinPxKernel, P.UseMinPixel);
                 lap("morph-open-close");
 
                 // 8) 라벨링 + 필터 (MinAreaMm2)
@@ -352,25 +313,21 @@ namespace _3D_VisionSource
             return roi;
         }
 
-        private static Mat BuildValidMask8U(float[,] zRaw, int H, int W)
+        private static Mat BoolMaskTo8U(bool[,] mask, int H, int W)
         {
-            var valid = new Mat(H, W, MatType.CV_8UC1);
+            var m = new OpenCvSharp.Mat(H, W, OpenCvSharp.MatType.CV_8UC1);
             unsafe
             {
-                byte* vp = (byte*)valid.Data;
-                int step = (int)valid.Step();
+                byte* p = (byte*)m.Data;
+                int step = (int)m.Step();
                 for (int y = 0; y < H; y++)
                 {
                     int row = y * step;
                     for (int x = 0; x < W; x++)
-                    {
-                        float v = zRaw[y, x];
-                        bool ok = (v != P.InvalidZ16);
-                        vp[row + x] = ok ? (byte)255 : (byte)0;
-                    }
+                        p[row + x] = mask[y, x] ? (byte)255 : (byte)0;
                 }
             }
-            return valid;
+            return m;
         }
 
         private static Mat BuildHoleMask(Mat valid8u, Mat roi8u)
@@ -384,11 +341,14 @@ namespace _3D_VisionSource
             return hole;
         }
 
-        private static void MorphCleanInPlace(Mat mask, int ksize)
+        private static void MorphCleanInPlace(Mat mask, int ksize, bool UseMinPixel)
         {
-            var k = Cv2.GetStructuringElement(MorphShapes.Rect, new OpenCvSharp.Size(ksize, ksize));
-            Cv2.MorphologyEx(mask, mask, MorphTypes.Open, k);
-            Cv2.MorphologyEx(mask, mask, MorphTypes.Close, k);
+            if (UseMinPixel)
+            {
+                var k = Cv2.GetStructuringElement(MorphShapes.Rect, new OpenCvSharp.Size(ksize, ksize));
+                Cv2.MorphologyEx(mask, mask, MorphTypes.Open, k);
+                Cv2.MorphologyEx(mask, mask, MorphTypes.Close, k);
+            }
         }
 
         private struct ComponentResult

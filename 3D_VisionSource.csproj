@@ -59,6 +59,7 @@
     <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Core\FusionData.cs" />
     <Compile Include="Core\FusionEngine.cs" />
     <Compile Include="Core\RoiOverlayForImageBox.cs" />
     <Compile Include="Helper\InlineNumberEdit.cs" />

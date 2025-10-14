@@ -139,6 +139,8 @@ namespace _3D_VisionSource
                     MinAreaMm2 = UP_Spec.Text.ToDouble(),
                     OverlayAlpha = UP_Overlay.Text.ToDouble(),
                     Centinal = UP_Centinal.Active,
+                    UseMinPixel = UP_Minpixel.Active,
+                    MinPxKernel = UP_MinpxKernel.Text.ToInt(),
                 };
 
                 // Inspect: Mat 기반 오버로드 사용 (경로/Bitmap 재-리드 없음)
@@ -365,6 +367,12 @@ namespace _3D_VisionSource
         private void UP_Overlay_Click(object sender, EventArgs e)
         {
             InlineNumberEdit.Start(host: UP_Overlay, initText: UP_Overlay?.Text, onCommit: (val) => { UP_Overlay.Text = val; });
+        }
+
+        private void UP_MinpxKernel_Click(object sender, EventArgs e)
+        {
+            InlineNumberEdit.Start(host: UP_MinpxKernel, initText: UP_MinpxKernel?.Text, onCommit: val => { UP_MinpxKernel.Text = val; }, decimals: 0, min: 1, max: 999  // 필요 범위
+            );
         }
 
         /// 현재 ImageBox 이미지를 저장

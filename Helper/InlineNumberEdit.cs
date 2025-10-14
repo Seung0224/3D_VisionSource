@@ -23,14 +23,7 @@ namespace _3D_VisionSource
         /// - onCommit: Enter/포커스아웃으로 확정 시 콜백(string)
         /// - onCancel: Esc로 취소 시 콜백(optional)
         /// </summary>
-        public static void Start(
-            Control host,
-            string initText,
-            Action<string> onCommit,
-            int decimals = 4,
-            double min = 0.0000,
-            double max = 100.0000,
-            Action onCancel = null)
+        public static void Start(Control host, string initText, Action<string> onCommit, int decimals = 4, double min = 0.0000, double max = 100.0000, Action onCancel = null)
         {
             if (host == null || host.IsDisposed) return;
 
