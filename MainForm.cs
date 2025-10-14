@@ -1,15 +1,13 @@
 ﻿using _3D_VisionSource.Viewer;
 using Cyotek.Windows.Forms;
-using HelixToolkit.Wpf.SharpDX;
 using OpenCvSharp;
 using Sunny.UI;
 using System;
-using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
@@ -132,8 +130,19 @@ namespace _3D_VisionSource
 
                 var roiRect = _roi.GetRoiImageRect();
 
+                var p = new InspectionParams
+                {
+                    Sx = UP_Sx.Text.ToFloat(),
+                    Sy = UP_Sy.Text.ToFloat(),
+                    ZScale = UP_Zscale.Text.ToFloat(),
+                    ZOffset = UP_Zoff.Text.ToFloat(),
+                    MinAreaMm2 = UP_Spec.Text.ToDouble(),
+                    OverlayAlpha = UP_Overlay.Text.ToDouble(),
+                    Centinal = UP_Centinal.Active,
+                };
+
                 // Inspect: Mat 기반 오버로드 사용 (경로/Bitmap 재-리드 없음)
-                var res = FusionEngine.Inspect(_intensityMat, zRaw, roiRectImg: roiRect);
+                var res = FusionEngine.Inspect(_intensityMat, zRaw, p, roiRectImg: roiRect);
 
                 // 검사 결과 테이블
                 InspectionResultsTable.Bind(GV_3D_VISION_LOG, InspectionResultsTable.ToRows(res));
@@ -328,6 +337,36 @@ namespace _3D_VisionSource
                 box.Image = null;
             }
         }
+
+        private void UP_Sx_Click(object sender, EventArgs e)
+        {
+            InlineNumberEdit.Start(host: UP_Sx, initText: UP_Sx?.Text, onCommit: (val) => { UP_Sx.Text = val; });
+        }
+
+        private void UP_Sy_Click(object sender, EventArgs e)
+        {
+            InlineNumberEdit.Start(host: UP_Sy, initText: UP_Sy?.Text, onCommit: (val) => { UP_Sy.Text = val; });
+        }
+
+        private void UP_Zscale_Click(object sender, EventArgs e)
+        {
+            InlineNumberEdit.Start(host: UP_Zscale, initText: UP_Zscale?.Text, onCommit: (val) => { UP_Zscale.Text = val; });
+        }
+        private void UP_Zoff_Click(object sender, EventArgs e)
+        {
+            InlineNumberEdit.Start(host: UP_Zoff, initText: UP_Zoff?.Text, onCommit: (val) => { UP_Zoff.Text = val; });
+        }
+
+        private void UP_Spec_Click(object sender, EventArgs e)
+        {
+            InlineNumberEdit.Start(host: UP_Spec, initText: UP_Spec?.Text, onCommit: (val) => { UP_Spec.Text = val; });
+        }
+
+        private void UP_Overlay_Click(object sender, EventArgs e)
+        {
+            InlineNumberEdit.Start(host: UP_Overlay, initText: UP_Overlay?.Text, onCommit: (val) => { UP_Overlay.Text = val; });
+        }
+
         /// 현재 ImageBox 이미지를 저장
         private void SaveImageFromBox(ImageBox box)
         {

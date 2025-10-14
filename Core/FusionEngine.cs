@@ -4,9 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Windows.Media.Media3D;
 using HT = HelixToolkit.Wpf.SharpDX;
@@ -19,17 +17,17 @@ namespace _3D_VisionSource
     {
         // public float Sx = 0.0057f;
         // 계산상 아마 이게 맞을탠데 3D 뷰어에서 보면 너무 작게 나와서 일단 0.025f로 올림 Y에 맞춰서
-        public float Sx = 0.025f;
-        public float Sy = 0.025f;
-        public float ZScale = 0.0041f;
+        public float Sx = 0f;
+        public float Sy = 0f;
+        public float ZScale = 0f;
         public float ZOffset = 0f;
         public byte InvalidZ = 0;
         public ushort InvalidZ16 = 0;
         public bool CenterOrigin = true;
-        public double MinAreaMm2 = 0.001;
-        public double OverlayAlpha = 0.25;
+        public double MinAreaMm2 = 0;
+        public double OverlayAlpha = 0;
+        public bool Centinal = false;
     }
-
     public class InspectionResults
     {
         public Point3D[] Points;
@@ -65,8 +63,18 @@ namespace _3D_VisionSource
         }
 
         #region Public API: Inspect (refactored)
-        public static InspectionResults Inspect(Mat intensityMat, float[,] zRaw, System.Drawing.RectangleF? roiRectImg = null, bool draw2DOverlay = true)
+        public static InspectionResults Inspect(Mat intensityMat, float[,] zRaw, InspectionParams p, System.Drawing.RectangleF? roiRectImg = null, bool draw2DOverlay = true)
         {
+            #region Set params
+            P.Sx = p.Sx;
+            P.Sy = p.Sy;
+            P.ZScale = p.ZScale;
+            P.ZOffset = p.ZOffset;
+            P.MinAreaMm2 = p.MinAreaMm2;
+            P.OverlayAlpha = p.OverlayAlpha;
+            P.Centinal = p.Centinal;
+            #endregion
+
             var sw = Stopwatch.StartNew();
             long last = 0L;
             Action<string> lap = name =>
@@ -105,7 +113,7 @@ namespace _3D_VisionSource
 
                 var pts = new Point3D[validCount];
                 var cols = new MediaColor[validCount];
-                ComputePointCloudAndColors(im, zRaw, validMaskBool, H, W, pts, cols);
+                ComputePointCloudAndColors(im, zRaw, validMaskBool, H, W, pts, cols, P.Centinal);
                 lap("pointcloud+color");
 
                 // 4) ROI 마스크 만들기 (사각 or 자동)
@@ -206,11 +214,11 @@ namespace _3D_VisionSource
                 {
                     float v = zRaw[y, x];
                     bool ok = (v != P.InvalidZ16);
-                    mask[y, x] = ok; validCount++;
-                    // if (ok) validCount++;
+                    mask[y, x] = ok; 
+                    validCount++;
                 }
         }
-        private static void ComputePointCloudAndColors(Mat im, float[,] zRaw, bool[,] validMaskBool, int H, int W, Point3D[] pts, MediaColor[] cols, bool includeInvalid = true)
+        private static void ComputePointCloudAndColors(Mat im, float[,] zRaw, bool[,] validMaskBool, int H, int W, Point3D[] pts, MediaColor[] cols, bool includeInvalid = false)
         {
             double cx = P.CenterOrigin ? W / 2.0 : 0.0;
             double cy = P.CenterOrigin ? H / 2.0 : 0.0;
