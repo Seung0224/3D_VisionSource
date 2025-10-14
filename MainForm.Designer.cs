@@ -757,7 +757,6 @@
             // 
             // UP_Centinal
             // 
-            this.UP_Centinal.Active = true;
             this.UP_Centinal.ActiveColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(192)))), ((int)(((byte)(192)))));
             this.UP_Centinal.ActiveText = "";
             this.UP_Centinal.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
