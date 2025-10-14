@@ -101,7 +101,7 @@ namespace _3D_VisionSource
 
                 bool[,] validMaskBool;
                 int validCount;
-                BuildValidMaskBool(zRaw, H, W, out validMaskBool, out validCount);
+                BuildValidMaskBool(zRaw, H, W, out validMaskBool, out validCount, p.Centinal);
                 if (validCount == 0) throw new InvalidOperationException("No valid Z.");
                 lap("Valid Z Calc");
 
@@ -123,8 +123,8 @@ namespace _3D_VisionSource
 
                 #region Rule-Based 기반 검사 비전 파이프 라인
                 // 5) 유효 Z 8U 마스크
-                // - Z맵에서 유효한 픽셀값만 뽑아 OpenCV에서 검사를 하기 위해서 변환하는 과정
-                // - Z맵에서 유효한값이라면 255 아니라면 0으로 데이터를 만듦
+                // - 전체 Z맵에서 유효한 픽셀값만 뽑아 OpenCV에서 검사를 하기 위해서 변환하는 과정
+                // - 전체 Z맵에서 유효한값이라면 255 아니라면 0으로 데이터를 만듦
                 var valid8u = BuildValidMask8U(zRaw, H, W);
                 lap("valid-mat8u");
 
@@ -206,18 +206,21 @@ namespace _3D_VisionSource
             im = intensityMat[0, H, 0, W];
         }
 
-        private static void BuildValidMaskBool(float[,] zRaw, int H, int W, out bool[,] mask, out int validCount)
+        private static void BuildValidMaskBool(float[,] zRaw, int H, int W, out bool[,] mask, out int validCount, bool countAllIfCentinal)
         {
             mask = new bool[H, W];
-            validCount = 0;
+            int cnt = 0;
+
             for (int y = 0; y < H; y++)
                 for (int x = 0; x < W; x++)
                 {
                     float v = zRaw[y, x];
-                    bool ok = (v != P.InvalidZ16);
-                    mask[y, x] = ok; 
-                    validCount++;
+                    bool ok = (v != P.InvalidZ16); // 필요 시 NaN/Inf 배제 추가
+                    mask[y, x] = ok;
+                    if (ok) cnt++;
                 }
+
+            validCount = countAllIfCentinal ? (H * W) : cnt;
         }
         public static int ComputePointCloudAndColorsFast(Mat im, float[,] zRaw, bool[,] validMask, int H, int W, Point3D[] pts, MediaColor [] cols, bool includeInvalid = false)
         {
