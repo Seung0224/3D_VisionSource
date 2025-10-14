@@ -17,15 +17,11 @@ namespace _3D_VisionSource
     #region Models
     public class InspectionParams
     {
-#if false
-        public float Sx = 0.0057f;
+        // public float Sx = 0.0057f;
+        // 계산상 아마 이게 맞을탠데 3D 뷰어에서 보면 너무 작게 나와서 일단 0.025f로 올림 Y에 맞춰서
+        public float Sx = 0.025f;
         public float Sy = 0.025f;
         public float ZScale = 0.0041f;
-#else
-        public float Sx = 0.05f;
-        public float Sy = 0.05f;
-        public float ZScale = 0.001f;
-#endif
         public float ZOffset = 0f;
         public byte InvalidZ = 0;
         public ushort InvalidZ16 = 0;
@@ -210,39 +206,52 @@ namespace _3D_VisionSource
                 {
                     float v = zRaw[y, x];
                     bool ok = (v != P.InvalidZ16);
-                    mask[y, x] = ok;
-                    if (ok) validCount++;
+                    mask[y, x] = ok; validCount++;
+                    // if (ok) validCount++;
                 }
         }
-
-        private static void ComputePointCloudAndColors(Mat im, float[,] zRaw, bool[,] validMaskBool, int H, int W, Point3D[] pts, MediaColor[] cols)
+        private static void ComputePointCloudAndColors(Mat im, float[,] zRaw, bool[,] validMaskBool, int H, int W, Point3D[] pts, MediaColor[] cols, bool includeInvalid = true)
         {
             double cx = P.CenterOrigin ? W / 2.0 : 0.0;
             double cy = P.CenterOrigin ? H / 2.0 : 0.0;
 
             int k = 0;
 
-            // 기본: BGRA 4채널 인덱서 시도
+            // --- 4채널(BGRA) ---
             if (im.Channels() == 4)
             {
                 var idx4 = im.GetGenericIndexer<Vec4b>();
                 for (int y = 0; y < H; y++)
+                {
                     for (int x = 0; x < W; x++)
                     {
-                        if (!validMaskBool[y, x]) continue;
+                        bool ok = validMaskBool[y, x];
 
+                        // 좌표 변환(무효 포함 모드여도 동일 변환)
                         double X = (x - cx) * P.Sx;
                         double Y = -(y - cy) * P.Sy;
                         double Z = P.ZOffset + P.ZScale * zRaw[y, x];
+
+                        if (!ok && !includeInvalid) continue;  // 기본: 무효는 건너뜀
+
                         pts[k] = new Point3D(X, Y, Z);
 
-                        var bgra = idx4[y, x];
-                        cols[k] = MediaColor.FromArgb(255, bgra.Item2, bgra.Item1, bgra.Item0); // A=255 고정
+                        var bgra = idx4[y, x]; // B,G,R,A
+                        if (ok)
+                        {
+                            cols[k] = MediaColor.FromArgb(255, bgra.Item2, bgra.Item1, bgra.Item0); // R,G,B
+                        }
+                        else
+                        {
+                            cols[k] = MediaColor.FromRgb(0, 0, 0);
+                        }
                         k++;
                     }
+                }
                 return;
             }
         }
+
 
         private static Mat BuildRoiMask(System.Drawing.RectangleF? roiRectImg, float[,] zRaw, int H, int W)
         {
