@@ -240,7 +240,7 @@
             // UP_MinpxKernel
             // 
             this.UP_MinpxKernel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.UP_MinpxKernel.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(189)))), ((int)(((byte)(255)))));
+            this.UP_MinpxKernel.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(200)))), ((int)(((byte)(189)))), ((int)(((byte)(255)))));
             this.UP_MinpxKernel.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.UP_MinpxKernel.Location = new System.Drawing.Point(49, 38);
             this.UP_MinpxKernel.Margin = new System.Windows.Forms.Padding(1);
@@ -283,6 +283,7 @@
             // UP_Minpixel
             // 
             this.UP_Minpixel.Active = true;
+            this.UP_Minpixel.ActiveColor = System.Drawing.Color.FromArgb(((int)(((byte)(200)))), ((int)(((byte)(189)))), ((int)(((byte)(255)))));
             this.UP_Minpixel.ActiveText = "";
             this.UP_Minpixel.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.UP_Minpixel.InActiveText = "";
@@ -756,6 +757,8 @@
             // 
             // UP_Centinal
             // 
+            this.UP_Centinal.Active = true;
+            this.UP_Centinal.ActiveColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(192)))), ((int)(((byte)(192)))));
             this.UP_Centinal.ActiveText = "";
             this.UP_Centinal.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.UP_Centinal.InActiveText = "";
