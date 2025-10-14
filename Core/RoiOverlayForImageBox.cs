@@ -66,6 +66,11 @@ namespace _3D_VisionSource
 
             if (_roiImg.HasValue)
             {
+                _locked = false;
+                _activeHandle = -1;
+                _draggingBody = _draggingHandle = false;
+                RestorePan();
+                _box.Cursor = Cursors.Default;
                 _box.Focus();
                 _box.Invalidate();
                 return;
@@ -76,9 +81,10 @@ namespace _3D_VisionSource
             var x = ((float)_box.Image.Width - w) * 0.5f;
             var y = ((float)_box.Image.Height - h) * 0.5f;
             _roiImg = Normalize(new RectangleF(x, y, w, h));
-            _locked = false; // 새로 만들 땐 편집 가능
+            _locked = false;
             _box.Invalidate();
         }
+
 
         public RectangleF? GetRoiImageRect() => _roiImg;
 
